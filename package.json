@@ -3,7 +3,7 @@
   "private": true,
   "description": "Home-care visit platform: patients book visits, clinicians clock in/out with GPS verification, admins see everything.",
   "scripts": {
-    "db:push": "supabase db push",
+    "db:push": "supabase db push --remote",
     "seed": "node --env-file=.env scripts/seed.mjs",
     "smoke": "node --env-file=.env scripts/smoke-test.mjs",
     "seed:local": "node --env-file=.env.local scripts/seed.mjs",

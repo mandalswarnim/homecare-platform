@@ -42,7 +42,7 @@ npx supabase status -o env  # shows the local URL and keys
 npm install
 npx supabase login
 npx supabase link --project-ref <project-ref>
-npx supabase db push
+npx supabase db push --remote   # without --remote the CLI targets the local stack
 ```
 
 In the hosted project, turn off **Authentication → Sign In / Providers → Email → Confirm email** for the demo (patients can then sign up and use the app straight away).
