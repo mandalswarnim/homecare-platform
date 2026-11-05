@@ -1,0 +1,19 @@
+node_modules/
+.DS_Store
+*.log
+
+# Build output (at any depth)
+.next/
+.expo/
+dist/
+web-build/
+*.tsbuildinfo
+
+# Secrets — never commit real env files (applies to every folder)
+.env
+.env.*
+!.env.example
+
+# Supabase CLI state
+supabase/.temp/
+supabase/.branches/

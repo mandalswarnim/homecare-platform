@@ -1,0 +1,329 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens. Light is the default; dark is selected with its own steps (not an automatic
+ * flip): it follows the OS setting unless the viewer picked a theme, which sets data-theme.
+ * Chart series colours come from a palette validated for colour-blind separation and contrast
+ * in both modes — keep them in sync with docs/PLAN.md if you change them.
+ */
+:root {
+  color-scheme: light;
+  --page: #f6f6f3;
+  --surface: #fcfcfb;
+  --surface-2: #f1f1ed;
+  --surface-3: #e7e6e0;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #6b6a65;
+  --faint: #898781;
+  --line: rgba(11, 11, 11, 0.1);
+  --line-strong: rgba(11, 11, 11, 0.18);
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+
+  --brand: #0f766e;
+  --brand-hover: #115e59;
+  --brand-ink: #ffffff;
+  --brand-soft: #e3f1ef;
+
+  /* data */
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-1-track: #cde2fb;
+  --deemph: #c3c2b7;
+
+  /* status — always paired with an icon and a label */
+  --good: #0ca30c;
+  --good-text: #006300;
+  --good-soft: #e5f4e3;
+  --warning: #fab219;
+  --warning-text: #8a5a00;
+  --warning-soft: #fdf2d8;
+  --serious: #ec835a;
+  --serious-text: #a3431c;
+  --serious-soft: #fcece4;
+  --critical: #d03b3b;
+  --critical-text: #b42323;
+  --critical-soft: #fbe6e4;
+  --info-text: #1c5cab;
+  --info-soft: #e6effb;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --surface-2: #222220;
+    --surface-3: #2c2c2a;
+    --ink: #f0efec;
+    --ink-2: #c3c2b7;
+    --muted: #a3a29a;
+    --faint: #898781;
+    --line: rgba(255, 255, 255, 0.1);
+    --line-strong: rgba(255, 255, 255, 0.18);
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --brand: #2bb3a3;
+    --brand-hover: #3cc7b6;
+    --brand-ink: #04211e;
+    --brand-soft: rgba(43, 179, 163, 0.14);
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-1-track: #184f95;
+    --deemph: #4a4a46;
+    --good-text: #3fbf3f;
+    --good-soft: rgba(12, 163, 12, 0.16);
+    --warning-text: #fab219;
+    --warning-soft: rgba(250, 178, 25, 0.13);
+    --serious-text: #f09a76;
+    --serious-soft: rgba(236, 131, 90, 0.15);
+    --critical-text: #ef6b6b;
+    --critical-soft: rgba(208, 59, 59, 0.18);
+    --info-text: #86b6ef;
+    --info-soft: rgba(57, 135, 229, 0.16);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d;
+  --surface: #1a1a19;
+  --surface-2: #222220;
+  --surface-3: #2c2c2a;
+  --ink: #f0efec;
+  --ink-2: #c3c2b7;
+  --muted: #a3a29a;
+  --faint: #898781;
+  --line: rgba(255, 255, 255, 0.1);
+  --line-strong: rgba(255, 255, 255, 0.18);
+  --grid: #2c2c2a;
+  --axis: #383835;
+  --brand: #2bb3a3;
+  --brand-hover: #3cc7b6;
+  --brand-ink: #04211e;
+  --brand-soft: rgba(43, 179, 163, 0.14);
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-1-track: #184f95;
+  --deemph: #4a4a46;
+  --good-text: #3fbf3f;
+  --good-soft: rgba(12, 163, 12, 0.16);
+  --warning-text: #fab219;
+  --warning-soft: rgba(250, 178, 25, 0.13);
+  --serious-text: #f09a76;
+  --serious-soft: rgba(236, 131, 90, 0.15);
+  --critical-text: #ef6b6b;
+  --critical-soft: rgba(208, 59, 59, 0.18);
+  --info-text: #86b6ef;
+  --info-soft: rgba(57, 135, 229, 0.16);
+}
+
+@theme inline {
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-grid: var(--grid);
+  --color-axis: var(--axis);
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-soft: var(--brand-soft);
+  --color-series-1: var(--series-1);
+  --color-series-2: var(--series-2);
+  --color-series-1-track: var(--series-1-track);
+  --color-deemph: var(--deemph);
+  --color-good: var(--good);
+  --color-good-text: var(--good-text);
+  --color-good-soft: var(--good-soft);
+  --color-warning: var(--warning);
+  --color-warning-text: var(--warning-text);
+  --color-warning-soft: var(--warning-soft);
+  --color-serious: var(--serious);
+  --color-serious-text: var(--serious-text);
+  --color-serious-soft: var(--serious-soft);
+  --color-critical: var(--critical);
+  --color-critical-text: var(--critical-text);
+  --color-critical-soft: var(--critical-soft);
+  --color-info-text: var(--info-text);
+  --color-info-soft: var(--info-soft);
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+}
+
+html {
+  background: var(--page);
+}
+
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* ── Live pulse (clinician currently on a visit) ── */
+@keyframes live-pulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+.live-dot {
+  position: relative;
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--good);
+}
+
+.live-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--good);
+  animation: live-pulse 1.8s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-dot::after,
+  .map-pin-live::before {
+    animation: none;
+  }
+}
+
+/* ── Map pins (Leaflet divIcons) ── */
+.leaflet-container {
+  font-family: var(--font-sans);
+  background: var(--surface-2);
+}
+
+.leaflet-tooltip.map-tip {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  padding: 6px 10px;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.leaflet-tooltip.map-tip::before {
+  display: none;
+}
+
+.map-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  box-shadow: 0 0 0 2px var(--surface), 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.map-pin svg {
+  width: 14px;
+  height: 14px;
+}
+
+.map-pin-home {
+  width: 22px;
+  height: 22px;
+  background: var(--surface);
+  color: var(--ink-2);
+  box-shadow: 0 0 0 1.5px var(--axis), 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+.map-pin-home svg {
+  width: 12px;
+  height: 12px;
+}
+
+.map-pin-live {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  background: var(--brand);
+  color: var(--brand-ink);
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+.map-pin-live::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: var(--brand);
+  z-index: -1;
+  animation: live-pulse 2s ease-out infinite;
+}
+
+.map-pin-ok {
+  width: 24px;
+  height: 24px;
+  background: var(--series-1);
+  color: #fff;
+}
+
+.map-pin-flag {
+  width: 24px;
+  height: 24px;
+  background: var(--warning);
+  color: #0b0b0b;
+}
+
+.map-pin-ok svg,
+.map-pin-flag svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* Geofence + GPS accuracy circles (Leaflet paths take their colours from tokens here). */
+.map-geofence {
+  stroke: var(--brand);
+  fill: var(--brand);
+}
+
+.map-accuracy {
+  stroke: var(--series-1);
+  fill: var(--series-1);
+}
+
+.map-accuracy-flag {
+  stroke: var(--warning);
+  fill: var(--warning);
+}
+
+/* OSM tiles are light-only; dim and invert them in dark mode so the map isn't a glare block. */
+:root[data-theme="dark"] .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9) saturate(0.6);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .leaflet-tile-pane {
+    filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9) saturate(0.6);
+  }
+}
+
+.leaflet-control-attribution {
+  font-size: 10px;
+}
