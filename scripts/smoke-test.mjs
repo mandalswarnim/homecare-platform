@@ -109,6 +109,12 @@ try {
   check('patient sees the visit report', report?.bp_systolic === 128, JSON.stringify(report));
   const { data: rawEvents } = await patient.from('visit_events').select('id').eq('visit_id', visit.id);
   check('patient cannot read raw GPS events', (rawEvents ?? []).length === 0);
+  check('clock-in keeps the home pin it was checked against', ev1?.home_lat === HOME.lat && ev1?.home_lng === HOME.lng && ev1?.geofence_radius_m === 150, JSON.stringify({ lat: ev1?.home_lat, lng: ev1?.home_lng, r: ev1?.geofence_radius_m }));
+  await patient.rpc('set_home_location', { p_lat: HOME.lat + 0.05, p_lng: HOME.lng, p_accuracy_m: 10, p_address: '2 Moved Street' });
+  const { data: kept } = await doctor.from('visit_events').select('home_lat').eq('id', inId).single();
+  check('re-pinning the home later leaves past evidence unchanged', kept?.home_lat === HOME.lat, JSON.stringify(kept));
+  const { error: trigErr } = await patient.rpc('handle_new_user');
+  check('trigger functions cannot be called through the API', !!trigErr, 'call succeeded!');
 
   // 6. Flags: far away + fake GPS, and a bad vitals value
   const { data: v2 } = await patient.rpc('request_visit', { p_service_type: 'Vitals check', p_scheduled_start: start, p_clinician_id: null });

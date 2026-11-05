@@ -117,17 +117,36 @@ export function VisitDetailView() {
 
 /* ───────────────────────────── Location evidence ───────────────────────────── */
 
+type Pin = { lat: number; lng: number; radius: number };
+
+const samePlace = (a: Pin, b: { lat: number; lng: number }) => Math.abs(a.lat - b.lat) < 1e-6 && Math.abs(a.lng - b.lng) < 1e-6;
+
+/**
+ * The home pin the clock events were checked against. Events store it; older events without the
+ * copy fall back to the current pin only if it hasn't moved since — otherwise it's unknown.
+ */
+function referenceHome(v: VisitFull, first: VisitEvent | null) {
+  const p = v.patient;
+  const current = p && p.home_lat != null && p.home_lng != null ? { lat: p.home_lat, lng: p.home_lng, radius: p.geofence_radius_m } : null;
+  if (!first) return { home: current, current, movedOn: null as string | null };
+  const stored = first.home_lat != null && first.home_lng != null ? { lat: first.home_lat, lng: first.home_lng, radius: first.geofence_radius_m ?? p?.geofence_radius_m ?? 150 } : null;
+  const movedAfter = Boolean(p?.home_set_at && new Date(p.home_set_at).getTime() > new Date(first.occurred_at).getTime());
+  const home = stored ?? (movedAfter ? null : current);
+  const moved = stored ? Boolean(current && !samePlace(stored, current)) : movedAfter;
+  return { home, current, movedOn: moved ? (p?.home_set_at ?? null) : null };
+}
+
 function LocationCard({ v }: { v: VisitFull }) {
   const p = v.patient;
-  const home = p && p.home_lat != null && p.home_lng != null ? { lat: p.home_lat, lng: p.home_lng } : null;
   const cin = eventOf(v, "clock_in");
   const cout = eventOf(v, "clock_out");
+  const { home, current, movedOn } = referenceHome(v, cin ?? cout);
   const pins: MapPin[] = [];
   const circles: MapCircle[] = [];
 
   if (home && p) {
-    pins.push({ id: "home", ...home, kind: "home", label: `${patientName(v)}'s home`, sublabel: p.address ?? undefined });
-    circles.push({ id: "fence", ...home, radius: p.geofence_radius_m, kind: "geofence" });
+    pins.push({ id: "home", lat: home.lat, lng: home.lng, kind: "home", label: `${patientName(v)}'s home`, sublabel: movedOn ? "Pin used for this check" : (p.address ?? undefined) });
+    circles.push({ id: "fence", lat: home.lat, lng: home.lng, radius: home.radius, kind: "geofence" });
   }
   for (const e of [cin, cout]) {
     if (!e || e.lat == null || e.lng == null) continue;
@@ -147,9 +166,11 @@ function LocationCard({ v }: { v: VisitFull }) {
     <Card
       title="Location check"
       subtitle={
-        home && p
-          ? `Clock-ins count as verified inside ${p.geofence_radius_m} m of the pinned home (plus GPS margin)`
-          : "The patient hasn't pinned their home, so clock-ins can't be location-verified"
+        home
+          ? `Clock-ins count as verified inside ${home.radius} m of the pinned home (plus GPS margin)`
+          : current
+            ? "Measured against an earlier home pin that wasn't recorded"
+            : "The patient hasn't pinned their home, so clock-ins can't be location-verified"
       }
       bodyClassName="px-5 pt-3 pb-5"
     >
@@ -165,13 +186,22 @@ function LocationCard({ v }: { v: VisitFull }) {
           <div className="mt-3">
             <MapLegend
               items={[
-                { kind: "home", label: "Pinned home (shaded: verified area)" },
-                { kind: "ok", label: "Clock point · verified" },
-                { kind: "flag", label: "Clock point · flagged" },
+                ...(home ? [{ kind: "home" as const, label: "Pinned home (shaded: verified area)" }] : []),
+                { kind: "ok" as const, label: "Clock point · verified" },
+                { kind: "flag" as const, label: "Clock point · flagged" },
               ]}
             />
           </div>
         </>
+      ) : null}
+      {movedOn ? (
+        <p className="mt-3 flex items-start gap-2 rounded-lg bg-surface-2 px-3 py-2 text-[13px] text-ink-2">
+          <MapPinOff className="mt-0.5 size-3.5 shrink-0 text-muted" aria-hidden />
+          <span>
+            {patientName(v)} moved their home pin after this visit ({formatWhen(movedOn)}).{" "}
+            {home ? "The map shows the pin these clock-ins were checked against." : "Distances were measured against the earlier pin, which wasn't recorded at the time."}
+          </span>
+        </p>
       ) : null}
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <EventPanel title="Clock-in" e={cin} v={v} />
@@ -197,12 +227,20 @@ function EventPanel({ title, e, v }: { title: string; e: VisitEvent | null; v: V
     return (
       <div className="rounded-lg border border-dashed border-line-strong px-4 py-3">
         <div className="text-sm font-medium text-ink">{title}</div>
-        <p className="mt-1 text-[13px] text-muted">{v.status === "completed" || v.status === "in_progress" ? "Waiting for the phone to sync." : "Not yet."}</p>
+        <p className="mt-1 text-[13px] text-muted">
+          {v.status === "completed"
+            ? "Waiting for the phone to sync."
+            : v.status === "in_progress"
+              ? title === "Clock-out"
+                ? "The clinician is still on site."
+                : "Waiting for the phone to sync."
+              : "Not yet."}
+        </p>
       </div>
     );
   }
   const skewMin = e.device_time ? Math.round((new Date(e.device_time).getTime() - new Date(e.received_at).getTime()) / MS.MIN) : null;
-  const radius = v.patient?.geofence_radius_m ?? 150;
+  const radius = e.geofence_radius_m ?? v.patient?.geofence_radius_m ?? 150;
   return (
     <div className={cx("rounded-lg border px-4 py-3", e.verified ? "border-line" : "border-warning")}>
       <div className="flex items-center justify-between gap-2">

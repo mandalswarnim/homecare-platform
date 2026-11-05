@@ -247,6 +247,10 @@ async function main() {
       note: flags.includes('outside_area') && kind === 'clock_in' ? 'Patient was at a neighbour\'s house' : null,
       was_offline: offline,
       platform: pick(['android', 'android', 'ios']),
+      // the pin and radius this fix was checked against (kept even if the patient re-pins later)
+      home_lat: h.lat,
+      home_lng: h.lng,
+      geofence_radius_m: 150,
     };
   }
 

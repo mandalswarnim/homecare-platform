@@ -59,6 +59,10 @@ export type VisitEvent = {
   was_offline: boolean;
   note: string | null;
   platform: string | null;
+  /** the home pin and radius this fix was checked against (null on events recorded before this was kept) */
+  home_lat: number | null;
+  home_lng: number | null;
+  geofence_radius_m: number | null;
 };
 
 export type Visit = {

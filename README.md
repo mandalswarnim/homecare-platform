@@ -89,6 +89,8 @@ The phone sends its GPS fix; the server — not the phone — decides:
 - **Clock tampering:** online events use the server's clock; offline events keep the phone's time but can't be in the future. More than 5 minutes of skew while online → `clock_mismatch`.
 - **No home pinned yet** → `no_home_pin`.
 
+Each clock event keeps a copy of the home pin and radius it was checked against, so the evidence stays correct if the patient moves their pin later.
+
 Flags never block a clock-in (a nurse at a hospital bedside still needs to record the visit); they mark it for review in the console. Offline clock-ins are queued on the phone with a unique ID and synced when signal returns, so retries can never double-count.
 
 ## Security model

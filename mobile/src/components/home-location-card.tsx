@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { colors } from '@/lib/theme';
 import type { Patient } from '@/lib/types';
 
+import { useNotify } from './notify';
 import { Button, Notice } from './ui';
 
 /** Lets a patient pin their home with the phone's GPS — the reference point for verified visits. */
@@ -14,6 +15,7 @@ export function HomeLocationCard({ patient, onSaved }: { patient: Patient | null
   const [busy, setBusy] = useState(false);
   const [accuracy, setAccuracy] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const notify = useNotify();
   const isSet = patient?.home_lat != null && patient?.home_lng != null;
 
   async function pinHome() {
@@ -29,6 +31,12 @@ export function HomeLocationCard({ patient, onSaved }: { patient: Patient | null
         p_accuracy_m: fix.accuracy,
       });
       if (rpcError) throw rpcError;
+      notify({
+        title: isSet ? 'Home location updated' : 'Home location saved',
+        body: `${fix.accuracy != null ? `Pinned to within ±${Math.round(fix.accuracy)} m. ` : ''}Your clinician will use it to find you.`,
+        tone: 'success',
+        icon: 'home',
+      });
       onSaved();
     } catch (e) {
       setError(errorMessage(e));
