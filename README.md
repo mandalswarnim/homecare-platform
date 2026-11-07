@@ -14,12 +14,11 @@ Three apps share one database:
 ## Repository layout
 
 ```
-supabase/migrations/   database schema, security policies and workflow functions (one SQL file)
+supabase/migrations/   database schema, security policies and workflow functions
 scripts/seed.mjs       creates demo accounts and ~2 weeks of realistic visits
 scripts/smoke-test.mjs end-to-end check of the booking → clock-in → clock-out flow and the security rules
 mobile/                Expo (React Native) app for patients and clinicians — iOS, Android and web
 web/                   Next.js office console
-docs/PLAN.md           architecture, verification rules, roadmap
 ```
 
 ## Running it

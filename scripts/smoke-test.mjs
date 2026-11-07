@@ -132,10 +132,15 @@ try {
     ev3?.verified === false && ev3?.flags?.includes('outside_area') && ev3?.flags?.includes('mock_location'),
     JSON.stringify(ev3?.flags));
   const { data: ev4, error: badVitalsErr } = await doctor.rpc('record_visit_event', {
-    p_event_id: randomUUID(), p_visit_id: v2.id, p_kind: 'clock_out', p_occurred_at: new Date().toISOString(),
+    p_event_id: randomUUID(), p_visit_id: v2.id, p_kind: 'clock_out',
     p_lat: far.lat, p_lng: far.lng, p_accuracy_m: 15, p_report: { pulse_bpm: 999 },
+    // offline, with a phone clock that runs two hours behind
+    p_was_offline: true, p_occurred_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
   });
   check('impossible vitals value does not block the clock-out', !badVitalsErr && ev4?.kind === 'clock_out', badVitalsErr?.message);
+  const { data: v2done } = await doctor.from('visits').select('started_at, ended_at').eq('id', v2.id).single();
+  check('an offline clock-out never lands before the clock-in',
+    !!v2done?.ended_at && new Date(v2done.ended_at) >= new Date(v2done.started_at), JSON.stringify(v2done));
 
   // 6. Office console
   const { error: adErr } = await admin.auth.signInWithPassword({ email: 'admin@example.com', password: DEMO_PASSWORD });
