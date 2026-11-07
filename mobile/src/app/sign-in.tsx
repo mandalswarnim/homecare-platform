@@ -8,9 +8,9 @@ import { supabase } from '@/lib/supabase';
 
 // Dev-only shortcuts: fills the email of a seeded demo account (the password is never in the app).
 const DEMO_ACCOUNTS = [
-  { label: 'Doctor', email: 'dr.amara@example.com' },
-  { label: 'Nurse', email: 'nurse.grace@example.com' },
-  { label: 'Patient', email: 'adaeze@example.com' },
+  { label: 'Doctor', email: 'dr.aya@example.com' },
+  { label: 'Nurse', email: 'nurse.adjoua@example.com' },
+  { label: 'Patient', email: 'amenan@example.com' },
 ];
 
 export default function SignIn() {

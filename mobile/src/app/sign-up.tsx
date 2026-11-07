@@ -41,7 +41,7 @@ export default function SignUp() {
         </Notice>
       ) : null}
       <Card>
-        <Field label="Full name" placeholder="e.g. Ama Mensah" value={fullName} onChangeText={setFullName} autoComplete="name" />
+        <Field label="Full name" placeholder="e.g. Aya Kouassi" value={fullName} onChangeText={setFullName} autoComplete="name" />
         <Field
           label="Phone number"
           placeholder="Your mobile number"
