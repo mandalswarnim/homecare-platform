@@ -70,7 +70,7 @@ export type TableSpec = { columns: string[]; rows: (string | number)[][]; numeri
 /** The table twin of a chart — every value reachable without hovering. */
 export function DataTable({ spec, caption }: { spec: TableSpec; caption: string }) {
   return (
-    <div className="max-h-80 overflow-auto rounded-lg border border-line">
+    <div className="max-h-80 overflow-auto rounded-[10px] border border-line">
       <table className="w-full text-sm">
         <caption className="sr-only">{caption}</caption>
         <thead className="sticky top-0 bg-surface-2 text-left text-xs text-muted">
@@ -121,13 +121,13 @@ export function ChartFrame({
 }) {
   const [view, setView] = useState<"chart" | "table">("chart");
   return (
-    <figure className={cx("flex flex-col rounded-xl border border-line bg-surface px-5 pt-4 pb-5", className)}>
+    <figure className={cx("flex flex-col rounded-[14px] border border-line bg-surface px-6 pt-5 pb-6 shadow-panel", className)}>
       <div className="flex items-start justify-between gap-3">
         <figcaption className="min-w-0">
-          <h3 className="text-[15px] font-semibold text-ink">{title}</h3>
+          <h3 className="text-[16px] font-semibold text-ink">{title}</h3>
           {subtitle ? <p className="mt-0.5 text-[13px] text-muted">{subtitle}</p> : null}
         </figcaption>
-        <div role="group" aria-label={`${title}: view`} className="inline-flex shrink-0 rounded-lg border border-line p-0.5">
+        <div role="group" aria-label={`${title}: view`} className="inline-flex shrink-0 rounded-[9px] bg-surface-2 p-0.5">
           {(
             [
               ["chart", ChartColumn, "Chart"],
@@ -142,8 +142,8 @@ export function ChartFrame({
               title={label}
               onClick={() => setView(key)}
               className={cx(
-                "flex size-7 items-center justify-center rounded-md",
-                view === key ? "bg-surface-3 text-ink" : "text-muted hover:bg-surface-2 hover:text-ink",
+                "flex size-7 items-center justify-center rounded-[7px] transition-colors",
+                view === key ? "bg-surface text-ink shadow-panel" : "text-faint hover:text-ink",
               )}
             >
               <Icon className="size-4" aria-hidden />
@@ -156,7 +156,7 @@ export function ChartFrame({
           <Legend items={legend} />
         </div>
       ) : null}
-      <div className="mt-3">{view === "chart" ? children : <DataTable spec={table} caption={title} />}</div>
+      <div className="mt-5">{view === "chart" ? children : <DataTable spec={table} caption={title} />}</div>
       {footer ? <div className="mt-3 text-xs text-muted">{footer}</div> : null}
     </figure>
   );

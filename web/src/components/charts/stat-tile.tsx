@@ -8,7 +8,7 @@ import { useWidth } from "./core";
 
 export type Delta = { value: number; text: string; upIsGood: boolean; period: string };
 
-/** Stat tile: label · value · delta vs a named period · optional sparkline or meter. */
+/** Stat cell: label, value, delta vs a named period, optional sparkline or meter. Sits in a strip that draws the surface. */
 export function StatTile({
   label,
   value,
@@ -23,12 +23,12 @@ export function StatTile({
   children?: ReactNode;
 }) {
   return (
-    <div className="flex min-w-0 flex-col rounded-xl border border-line bg-surface px-4 pt-3.5 pb-4">
+    <div className="flex min-w-0 flex-col px-5 py-5">
       <div className="text-[13px] text-muted">{label}</div>
-      <div className="mt-1 text-[28px] leading-tight font-semibold tracking-tight text-ink">{value}</div>
+      <div className="mt-2 text-[30px] leading-none font-medium tracking-[-0.02em] text-ink tabular-nums">{value}</div>
       {delta ? <DeltaLine delta={delta} /> : null}
-      {note ? <div className="mt-0.5 text-xs text-muted">{note}</div> : null}
-      {children ? <div className="mt-auto pt-3">{children}</div> : null}
+      {note ? <div className="mt-2 text-xs leading-snug text-muted">{note}</div> : null}
+      {children ? <div className="mt-auto pt-4">{children}</div> : null}
     </div>
   );
 }
@@ -38,7 +38,7 @@ function DeltaLine({ delta }: { delta: Delta }) {
   const good = flat ? null : delta.value > 0 === delta.upIsGood;
   const Icon = flat ? Minus : delta.value > 0 ? ArrowUpRight : ArrowDownRight;
   return (
-    <div className="mt-0.5 flex flex-wrap items-center gap-x-1 text-xs">
+    <div className="mt-2 flex flex-wrap items-center gap-x-1 text-xs">
       <span className={cx("inline-flex items-center gap-0.5 font-medium whitespace-nowrap", good === null ? "text-muted" : good ? "text-good-text" : "text-critical-text")}>
         <Icon className="size-3.5" aria-hidden />
         {delta.text}
@@ -89,7 +89,7 @@ export function Sparkline({ values, labels, format = String, height = 36 }: { va
       ) : null}
       {active !== null ? (
         <div
-          className="pointer-events-none absolute bottom-full z-10 mb-1 rounded-md border border-line bg-surface px-2 py-1 text-xs whitespace-nowrap shadow-md"
+          className="pointer-events-none absolute bottom-full z-10 mb-1 rounded-md border border-line bg-surface px-2 py-1 text-xs whitespace-nowrap shadow-pop"
           style={{ left: Math.min(Math.max(x(active) - 40, 0), Math.max(width - 110, 0)) }}
         >
           <span className="font-semibold text-ink tabular-nums">{format(values[active])}</span> <span className="text-muted">{labels[active]}</span>
@@ -112,7 +112,7 @@ export function Meter({ value, level, label }: { value: number; level: MeterLeve
   const m = METER[level];
   const pct = Math.round(Math.min(1, Math.max(0, value)) * 100);
   return (
-    <div role="meter" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} className="h-2 w-full overflow-hidden rounded-full" style={{ background: m.track }}>
+    <div role="meter" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} className="h-1.5 w-full overflow-hidden rounded-full" style={{ background: m.track }}>
       <div className="h-full rounded-full" style={{ width: `${pct}%`, background: m.fill }} />
     </div>
   );

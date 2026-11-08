@@ -1,6 +1,6 @@
 "use client";
 
-import { CircleCheck, Phone, Receipt, TriangleAlert } from "lucide-react";
+import { CircleCheck, Phone, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -14,7 +14,7 @@ import { Meter, Sparkline, StatTile, type MeterLevel } from "@/components/charts
 import { useConsole } from "@/components/console-data";
 import { MapLegend, MapView, type MapPin } from "@/components/map";
 import { SeverityTag, VerificationBadge } from "@/components/status";
-import { Avatar, Button, Card, EmptyState, ErrorNote, PageHeader, Segmented, Spinner } from "@/components/ui";
+import { Avatar, Button, Card, cx, EmptyState, ErrorNote, PageHeader, Segmented, Spinner } from "@/components/ui";
 import { VisitTable } from "@/components/visit-table";
 import { needsAttention, type AttentionItem } from "@/lib/attention";
 import {
@@ -46,20 +46,21 @@ export function OverviewView() {
 
   return (
     <>
-      <PageHeader title="Overview" subtitle={`${formatLongDay(new Date(now))} · ${data.patients.length} patients · ${data.clinicians.length} clinicians`} />
+      <PageHeader title="Overview" subtitle={`${formatLongDay(new Date(now))}, ${data.patients.length} patients and ${data.clinicians.length} clinicians`} />
       {error ? (
-        <div className="mb-4">
+        <div className="mb-5">
           <ErrorNote message={`Couldn't refresh (${error}). Showing the last data loaded.`} onRetry={reload} />
         </div>
       ) : null}
-      <RightNow data={data} now={now} />
-      <div className="mt-4 grid items-start gap-4 xl:grid-cols-3">
-        <AttentionCard data={data} now={now} onChanged={reload} className="xl:col-span-2" />
-        <Card title="Activity" subtitle="Updates as it happens">
-          <ActivityFeed items={data.activity} clinicians={data.clinicians} now={now} />
-        </Card>
+      <div className="grid items-start gap-5 xl:grid-cols-12">
+        <AttentionCard data={data} now={now} onChanged={reload} className="xl:col-span-8" />
+        <div className="grid gap-5 xl:col-span-4">
+          <OnVisitNow data={data} now={now} />
+          <ActivityCard data={data} now={now} />
+        </div>
       </div>
-      <TodayCard visits={data.visits} now={now} />
+      <LiveMap data={data} now={now} />
+      <TodayCard visits={data.visits} now={now} className="mt-5" />
       <Performance data={data} now={now} />
     </>
   );
@@ -67,13 +68,37 @@ export function OverviewView() {
 
 /* ───────────────────────────── Right now ───────────────────────────── */
 
-function RightNow({ data, now }: { data: ConsoleData; now: number }) {
-  const router = useRouter();
+function OnVisitNow({ data, now, className }: { data: ConsoleData; now: number; className?: string }) {
   const active = data.visits.filter((v) => v.status === "in_progress");
   const today = data.visits.filter((v) => sameDay(v.scheduled_start, now) && v.status !== "cancelled");
   const done = today.filter((v) => v.status === "completed").length;
   const toGo = today.filter((v) => v.status === "accepted" || v.status === "requested").length;
 
+  return (
+    <Card title="On a visit now" className={className}>
+      <div className="flex items-baseline gap-2.5">
+        <span className="text-[56px] leading-none font-medium tracking-[-0.03em] text-ink tabular-nums">{active.length}</span>
+        <span className="text-[15px] text-muted">of {data.clinicians.length} clinicians</span>
+      </div>
+      <dl className="mt-6 grid grid-cols-3 border-y border-line">
+        {[
+          ["Today", today.length],
+          ["Done", done],
+          ["To go", toGo],
+        ].map(([label, value], i) => (
+          <div key={label} className={cx("py-3.5", i > 0 && "border-l border-line pl-4")}>
+            <dt className="text-xs text-muted">{label}</dt>
+            <dd className="mt-1 text-[22px] leading-none font-medium text-ink tabular-nums">{value}</dd>
+          </div>
+        ))}
+      </dl>
+      <ActiveList visits={active} />
+    </Card>
+  );
+}
+
+function LiveMap({ data, now }: { data: ConsoleData; now: number }) {
+  const router = useRouter();
   const pins = useMemo(() => buildPins(data.visits, now), [data.visits, now]);
   const fitKey = pins
     .map((p) => p.id)
@@ -81,54 +106,31 @@ function RightNow({ data, now }: { data: ConsoleData; now: number }) {
     .join("|");
 
   return (
-    <div className="grid gap-4 lg:grid-cols-3">
-      <Card title="On a visit now" subtitle="Clinicians clocked in at a patient's home">
-        <div className="flex items-end gap-3">
-          <span className="text-6xl leading-none font-semibold tracking-tight text-ink">{active.length}</span>
-          <span className="pb-1 text-sm text-muted">
-            of {data.clinicians.length} clinicians
-          </span>
+    <section aria-labelledby="map-title" className="mt-5 overflow-hidden rounded-[14px] border border-line bg-surface shadow-panel">
+      <div className="flex flex-col gap-3 px-6 pt-5 pb-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="min-w-0">
+          <h2 id="map-title" className="text-[16px] font-semibold text-ink">
+            Live map
+          </h2>
+          <p className="mt-0.5 text-[13px] text-muted">Clock-ins are checked against each patient&apos;s pinned home</p>
         </div>
-        <dl className="mt-4 grid grid-cols-3 gap-2 rounded-lg bg-surface-2 px-3 py-2.5 text-center">
-          {[
-            ["Today", today.length],
-            ["Done", done],
-            ["To go", toGo],
-          ].map(([label, value]) => (
-            <div key={label}>
-              <dt className="text-xs text-muted">{label}</dt>
-              <dd className="text-lg font-semibold text-ink">{value}</dd>
-            </div>
-          ))}
-        </dl>
-        <ActiveList visits={active} />
-      </Card>
-
-      <Card
-        title="Live map"
-        subtitle="Clock-ins are checked against each patient's pinned home"
-        className="lg:col-span-2"
-        bodyClassName="px-5 pt-3 pb-4"
-      >
-        <MapView
-          pins={pins}
-          ariaLabel="Map of clinicians on visits and today's patient homes"
-          fitKey={fitKey}
-          onSelect={(p) => p.visitId && router.push(`/visits/${p.visitId}`)}
-          className="h-[340px] w-full overflow-hidden rounded-lg lg:h-[400px]"
+        <MapLegend
+          items={[
+            { kind: "live", label: "On a visit now" },
+            { kind: "home", label: "Visit later today" },
+            { kind: "ok", label: "Done today, verified" },
+            { kind: "flag", label: "Done today, needs review" },
+          ]}
         />
-        <div className="mt-3">
-          <MapLegend
-            items={[
-              { kind: "live", label: "On a visit now" },
-              { kind: "home", label: "Visit later today" },
-              { kind: "ok", label: "Done today · verified" },
-              { kind: "flag", label: "Done today · needs review" },
-            ]}
-          />
-        </div>
-      </Card>
-    </div>
+      </div>
+      <MapView
+        pins={pins}
+        ariaLabel="Map of clinicians on visits and today's patient homes"
+        fitKey={fitKey}
+        onSelect={(p) => p.visitId && router.push(`/visits/${p.visitId}`)}
+        className="h-[360px] w-full overflow-hidden border-t border-line lg:h-[440px]"
+      />
+    </section>
   );
 }
 
@@ -146,7 +148,7 @@ function buildPins(visits: VisitFull[], now: number): MapPin[] {
         kind: "live",
         text: initials(who),
         label: who,
-        sublabel: `With ${patientName(v)} · since ${formatTime(v.started_at)}`,
+        sublabel: `With ${patientName(v)} since ${formatTime(v.started_at)}`,
         visitId: v.id,
       });
     } else if (!sameDay(v.scheduled_start, now)) {
@@ -158,7 +160,7 @@ function buildPins(visits: VisitFull[], now: number): MapPin[] {
         ...at,
         kind: ok ? "ok" : "flag",
         label: `${shortName(who)} at ${patientName(v)}`,
-        sublabel: `Done ${formatTime(v.ended_at)} · ${ok ? "location verified" : "needs review"}`,
+        sublabel: `Done ${formatTime(v.ended_at)}, ${ok ? "location verified" : "needs review"}`,
         visitId: v.id,
       });
     } else if ((v.status === "accepted" || v.status === "requested") && home) {
@@ -167,7 +169,7 @@ function buildPins(visits: VisitFull[], now: number): MapPin[] {
         ...home,
         kind: "home",
         label: patientName(v),
-        sublabel: `${formatTime(v.scheduled_start)} · ${v.service_type} · ${v.clinician ? shortName(v.clinician.full_name) : "unassigned"}`,
+        sublabel: `${formatTime(v.scheduled_start)}, ${v.service_type}, ${v.clinician ? shortName(v.clinician.full_name) : "unassigned"}`,
         visitId: v.id,
       });
     }
@@ -177,21 +179,22 @@ function buildPins(visits: VisitFull[], now: number): MapPin[] {
 
 function ActiveList({ visits }: { visits: VisitFull[] }) {
   const now = useNow(15_000);
-  if (visits.length === 0) return <p className="mt-4 text-sm text-muted">No one is on a visit right now.</p>;
+  if (visits.length === 0) return <p className="mt-5 text-sm text-muted">No one is on a visit right now.</p>;
   return (
-    <ul className="mt-4 space-y-1">
+    <ul className="mt-4 -mb-2 space-y-0.5">
       {visits.map((v) => {
         const clockIn = eventOf(v, "clock_in");
         return (
           <li key={v.id}>
-            <Link href={`/visits/${v.id}`} className="-mx-2 flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-surface-2">
-              <Avatar name={v.clinician?.full_name} size={34} />
+            <Link href={`/visits/${v.id}`} className="-mx-2.5 flex items-center gap-3 rounded-[10px] px-2.5 py-2.5 transition-colors hover:bg-surface-2">
+              <Avatar name={v.clinician?.full_name} size={36} />
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-medium text-ink">
+                <span className="block truncate text-[14px] font-medium text-ink">
                   {shortName(v.clinician?.full_name)} <span className="font-normal text-muted">with</span> {patientName(v)}
                 </span>
-                <span className="block text-xs text-muted tabular-nums">
-                  {v.started_at ? `${formatDuration(now - new Date(v.started_at).getTime())} on site` : "Clocked in"} · {v.service_type}
+                <span className="mt-0.5 flex flex-wrap gap-x-2.5 text-xs text-muted tabular-nums">
+                  <span>{v.started_at ? `${formatDuration(now - new Date(v.started_at).getTime())} on site` : "Clocked in"}</span>
+                  <span>{v.service_type}</span>
                 </span>
               </span>
               {clockIn ? <VerificationBadge value={clockIn.verified ? "verified" : "flagged"} flags={clockIn.flags} /> : null}
@@ -211,21 +214,32 @@ function AttentionCard({ data, now, onChanged, className }: { data: ConsoleData;
   const shown = expanded ? items : items.slice(0, 6);
   return (
     <Card
-      title="Needs attention"
-      subtitle={items.length ? `${items.length} item${items.length === 1 ? "" : "s"} for the office` : "Requests, late arrivals and flagged clock-ins"}
+      title={
+        <span className="flex items-center gap-2.5">
+          Needs attention
+          {items.length ? (
+            <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-ink px-2 text-xs font-semibold text-surface tabular-nums">
+              <span className="sr-only">: </span>
+              {items.length}
+              <span className="sr-only"> item{items.length === 1 ? "" : "s"} for the office</span>
+            </span>
+          ) : null}
+        </span>
+      }
+      subtitle={items.length ? undefined : "Requests, late arrivals and flagged clock-ins"}
       className={className}
     >
       {items.length === 0 ? (
         <EmptyState icon={CircleCheck} title="All clear" body="No unanswered requests, late arrivals or flagged clock-ins." />
       ) : (
-        <ul className="divide-y divide-line">
+        <ul className="-mt-1 divide-y divide-line">
           {shown.map((it) => (
             <AttentionRow key={it.id} item={it} clinicians={data.clinicians} onChanged={onChanged} />
           ))}
         </ul>
       )}
       {items.length > 6 ? (
-        <div className="mt-3">
+        <div className="mt-2 -mb-2 border-t border-line pt-2">
           <Button size="sm" variant="ghost" onClick={() => setExpanded((e) => !e)}>
             {expanded ? "Show fewer" : `Show all ${items.length}`}
           </Button>
@@ -238,14 +252,20 @@ function AttentionCard({ data, now, onChanged, className }: { data: ConsoleData;
 function AttentionRow({ item, clinicians, onChanged }: { item: AttentionItem; clinicians: Clinician[]; onChanged: () => void }) {
   const phone = item.visit.clinician?.phone;
   return (
-    <li className="flex flex-col gap-3 py-3 first:pt-0 last:pb-0 md:flex-row md:items-center md:justify-between">
-      <div className="flex min-w-0 gap-3">
-        <SeverityTag severity={item.severity} className="mt-0.5 shrink-0" />
+    <li className="flex flex-col gap-3 py-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex min-w-0 gap-4">
+        <SeverityTag severity={item.severity} className="mt-px w-[5.75rem] shrink-0 justify-center" />
         <div className="min-w-0">
-          <Link href={`/visits/${item.visit.id}`} className="text-sm font-medium text-ink hover:underline">
+          <Link href={`/visits/${item.visit.id}`} className="text-[15px] leading-snug font-medium text-ink hover:underline">
             {item.title}
           </Link>
-          <p className="mt-0.5 text-[13px] text-muted">{item.detail}</p>
+          <p className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[13px] text-muted">
+            {item.detail.split(" · ").map((part, i) => (
+              <span key={i} className={i === 0 ? "text-ink-2" : undefined}>
+                {part}
+              </span>
+            ))}
+          </p>
         </div>
       </div>
       <div className="shrink-0 md:pl-4">
@@ -254,14 +274,14 @@ function AttentionRow({ item, clinicians, onChanged }: { item: AttentionItem; cl
         ) : item.action === "call" && phone ? (
           <a
             href={`tel:${phone.replace(/\s/g, "")}`}
-            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line-strong bg-surface px-2.5 text-[13px] font-medium text-ink hover:bg-surface-2"
+            className="inline-flex h-8 items-center gap-1.5 rounded-[9px] border border-line-strong bg-surface px-3 text-[13px] font-medium text-ink transition-colors hover:bg-surface-2 active:bg-surface-3"
           >
             <Phone className="size-4" aria-hidden /> Call {shortName(item.visit.clinician?.full_name)}
           </a>
         ) : (
           <Link
             href={`/visits/${item.visit.id}`}
-            className="inline-flex h-8 items-center rounded-lg border border-line-strong bg-surface px-2.5 text-[13px] font-medium text-ink hover:bg-surface-2"
+            className="inline-flex h-8 items-center rounded-[9px] border border-line-strong bg-surface px-3 text-[13px] font-medium text-ink transition-colors hover:bg-surface-2 active:bg-surface-3"
           >
             Review
           </Link>
@@ -273,15 +293,31 @@ function AttentionRow({ item, clinicians, onChanged }: { item: AttentionItem; cl
 
 /* ───────────────────────────── Today ───────────────────────────── */
 
-function TodayCard({ visits, now }: { visits: VisitFull[]; now: number }) {
+function ActivityCard({ data, now, className }: { data: ConsoleData; now: number; className?: string }) {
+  const [more, setMore] = useState(false);
+  return (
+    <Card title="Activity" className={className}>
+      <ActivityFeed items={data.activity} clinicians={data.clinicians} now={now} limit={more ? 12 : 6} />
+      {data.activity.length > 6 ? (
+        <div className="mt-2 -mb-2 border-t border-line pt-2">
+          <Button size="sm" variant="ghost" onClick={() => setMore((m) => !m)}>
+            {more ? "Show less" : "Show more"}
+          </Button>
+        </div>
+      ) : null}
+    </Card>
+  );
+}
+
+function TodayCard({ visits, now, className }: { visits: VisitFull[]; now: number; className?: string }) {
   const today = visits.filter((v) => sameDay(v.scheduled_start, now) || v.status === "in_progress");
   return (
     <Card
       title="Today's schedule"
       subtitle={`${today.length} visit${today.length === 1 ? "" : "s"}`}
-      className="mt-4"
+      className={className}
       action={
-        <Link href="/visits?when=today" className="text-[13px] font-medium text-brand hover:underline">
+        <Link href="/visits?when=today" className="inline-flex h-8 items-center rounded-[9px] px-2 text-[13px] font-medium text-brand transition-colors hover:bg-brand-soft">
           Open in visits
         </Link>
       }
@@ -330,18 +366,18 @@ function Performance({ data, now }: { data: ConsoleData; now: number }) {
   const prevName = `previous ${range.short}`;
 
   return (
-    <section aria-labelledby="perf-title" className="mt-8">
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <section aria-labelledby="perf-title" className="mt-14 border-t border-line pt-10">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 id="perf-title" className="text-lg font-semibold text-ink">
+          <h2 id="perf-title" className="font-display text-[26px] font-medium tracking-[-0.012em] text-ink">
             Performance
           </h2>
-          <p className="text-sm text-muted">Completed visits, verification and response times · {range.label.toLowerCase()}</p>
+          <p className="mt-1 text-[15px] text-muted">Completed visits, verification and response times, {range.label.toLowerCase()}</p>
         </div>
         <Segmented label="Date range" value={rangeKey} onChange={setRangeKey} options={RANGES.map((r) => ({ value: r.key, label: r.short }))} />
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[14px] border border-line bg-line shadow-panel md:grid-cols-3 xl:grid-cols-6 [&>*]:bg-surface">
         <StatTile label="Visits completed" value={formatInt(cur.completed)} delta={{ value: cur.completed - prev.completed, text: signed(cur.completed - prev.completed), upIsGood: true, period: prevName }}>
           <Sparkline values={days.map((d) => d.verified + d.review)} labels={days.map((d) => dayLabel(d.date))} />
         </StatTile>
@@ -355,7 +391,7 @@ function Performance({ data, now }: { data: ConsoleData; now: number }) {
         <StatTile label="Location-verified" value={formatPct(cur.verifiedRate)} note={cur.needsReview ? `${cur.needsReview} visit${cur.needsReview === 1 ? "" : "s"} need review` : "Every visit verified"}>
           <Meter value={cur.verifiedRate ?? 0} level={level} label="Share of completed visits with verified clock-in and clock-out" />
           {level !== "accent" ? (
-            <p className="mt-1.5 flex items-center gap-1 text-[11px] font-medium text-warning-text">
+            <p className="mt-2 flex items-center gap-1 text-xs font-medium text-warning-text">
               <TriangleAlert className="size-3" aria-hidden /> Below the 90% target
             </p>
           ) : null}
@@ -363,13 +399,13 @@ function Performance({ data, now }: { data: ConsoleData; now: number }) {
         <StatTile label="On-time arrivals" value={formatPct(cur.onTimeRate)} note="Clocked in within 15 min of the booking" />
         <StatTile
           label="Time to accept"
-          value={cur.medianAcceptMin == null ? "—" : cur.medianAcceptMin < 90 ? `${Math.round(cur.medianAcceptMin)} min` : formatHours(cur.medianAcceptMin * MS.MIN)}
+          value={cur.medianAcceptMin == null ? "None yet" : cur.medianAcceptMin < 90 ? `${Math.round(cur.medianAcceptMin)} min` : formatHours(cur.medianAcceptMin * MS.MIN)}
           note="Median, from booking to a clinician confirming"
         />
         <StatTile label="Patients served" value={formatInt(cur.patientsServed)} note={`of ${data.patients.length} registered`} />
       </div>
 
-      <div className="mt-4 grid items-start gap-4 lg:grid-cols-3">
+      <div className="mt-5 grid items-start gap-5 lg:grid-cols-3">
         <ChartFrame
           title="Completed visits per day"
           subtitle="Split by whether both clock-ins were verified at the patient's home"
@@ -396,7 +432,7 @@ function Performance({ data, now }: { data: ConsoleData; now: number }) {
         </ChartFrame>
       </div>
 
-      <div className="mt-4 grid items-start gap-4 lg:grid-cols-3">
+      <div className="mt-5 grid items-start gap-5 lg:grid-cols-3">
         <ChartFrame
           title="Visits by clinician"
           subtitle="Completed visits and hours on site"
@@ -419,26 +455,21 @@ function Performance({ data, now }: { data: ConsoleData; now: number }) {
           )}
         </ChartFrame>
         <Card title="Revenue" subtitle="Not connected yet">
-          <div className="flex gap-3">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-surface-2 text-muted">
-              <Receipt className="size-4" aria-hidden />
-            </span>
-            <p className="text-[13px] text-ink-2">
-              Next phase: set a price for each service, and invoices are created from completed, verified visits — then revenue shows here and
-              patients see their invoices in the app.
-            </p>
-          </div>
-          <dl className="mt-4 grid grid-cols-2 gap-3 rounded-lg bg-surface-2 px-3 py-2.5">
-            <div>
+          <dl className="grid grid-cols-2 border-y border-line">
+            <div className="py-3.5">
               <dt className="text-xs text-muted">Billable visits</dt>
-              <dd className="text-lg font-semibold text-ink">{formatInt(cur.completed)}</dd>
+              <dd className="mt-1 text-[22px] leading-none font-medium text-ink tabular-nums">{formatInt(cur.completed)}</dd>
             </div>
-            <div>
+            <div className="border-l border-line py-3.5 pl-4">
               <dt className="text-xs text-muted">Billable hours</dt>
-              <dd className="text-lg font-semibold text-ink">{formatHours(cur.careMs)}</dd>
+              <dd className="mt-1 text-[22px] leading-none font-medium text-ink tabular-nums">{formatHours(cur.careMs)}</dd>
             </div>
           </dl>
           <p className="mt-2 text-xs text-muted">{range.label}</p>
+          <p className="mt-4 text-[13px] leading-relaxed text-muted">
+            Next phase: set a price for each service, and invoices are created from completed, verified visits. Then revenue shows here and
+            patients see their invoices in the app.
+          </p>
         </Card>
       </div>
     </section>

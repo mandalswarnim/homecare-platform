@@ -8,7 +8,7 @@ import { ChartFrame } from "@/components/charts/core";
 import { TrendChart, type TrendSeries } from "@/components/charts/trend-chart";
 import { MapView } from "@/components/map";
 import { StatusBadge } from "@/components/status";
-import { BackLink, Card, cx, EmptyState, ErrorNote, Field, PageHeader, Spinner } from "@/components/ui";
+import { BackLink, Card, cx, EmptyState, ErrorNote, Field, Meta, Nil, PageHeader, Spinner } from "@/components/ui";
 import { VisitTable } from "@/components/visit-table";
 import { readings } from "@/components/vitals";
 import { age, formatFullDate, formatShortDay, formatWhen, shortName } from "@/lib/format";
@@ -54,11 +54,11 @@ export function PatientDetailView() {
       <PageHeader
         back={<BackLink href="/patients">Patients</BackLink>}
         title={name}
-        subtitle={[years != null ? `${years} years old` : null, p.profile?.phone, p.address].filter(Boolean).join(" · ") || "Patient"}
+        subtitle={years != null || p.profile?.phone || p.address ? <Meta parts={[years != null ? `${years} years old` : null, p.profile?.phone, p.address]} /> : "Patient"}
       />
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="space-y-4 lg:col-span-2">
+      <div className="grid items-start gap-5 lg:grid-cols-3">
+        <div className="space-y-5 lg:col-span-2">
           <VisitResults visits={withReports.slice().reverse()} now={now} />
           <VitalsTrends visits={withReports} />
           <Card title="Visit history" subtitle={`${history.length} visit${history.length === 1 ? "" : "s"}`}>
@@ -72,15 +72,17 @@ export function PatientDetailView() {
           </Card>
         </div>
 
-        <div className="space-y-4">
-          <Card title="Home" subtitle={p.home_lat != null && p.home_set_at ? `Pinned ${formatFullDate(p.home_set_at)} · verified area ${p.geofence_radius_m} m` : undefined}>
+        <div className="space-y-5">
+          <Card title="Home" subtitle={p.home_lat != null && p.home_set_at ? `Pinned ${formatFullDate(p.home_set_at)}, verified area ${p.geofence_radius_m} m` : undefined}
+            bodyClassName={p.home_lat != null && p.home_lng != null ? "px-0 pt-4 pb-0" : undefined}
+          >
             {p.home_lat != null && p.home_lng != null ? (
               <MapView
                 pins={[{ id: "home", lat: p.home_lat, lng: p.home_lng, kind: "home", label: `${name}'s home`, sublabel: p.address ?? undefined }]}
                 circles={[{ id: "fence", lat: p.home_lat, lng: p.home_lng, radius: p.geofence_radius_m, kind: "geofence" }]}
                 ariaLabel={`${name}'s pinned home`}
                 fitKey={p.id}
-                className="h-[220px] w-full overflow-hidden rounded-lg"
+                className="h-[240px] w-full overflow-hidden rounded-b-[14px] border-t border-line"
               />
             ) : (
               <EmptyState icon={MapPinOff} title="Home not pinned yet" body="Ask the patient to open the app at home and tap “Pin my home”. Until then clock-ins can't be location-verified." />
@@ -89,10 +91,10 @@ export function PatientDetailView() {
 
           <Card title="Details">
             <dl className="grid grid-cols-2 gap-x-3 gap-y-3">
-              <Field label="Date of birth">{p.date_of_birth ? formatFullDate(`${p.date_of_birth}T00:00:00`) : "—"}</Field>
-              <Field label="Registered">{p.profile?.created_at ? formatFullDate(p.profile.created_at) : "—"}</Field>
+              <Field label="Date of birth">{p.date_of_birth ? formatFullDate(`${p.date_of_birth}T00:00:00`) : "Not recorded"}</Field>
+              <Field label="Registered">{p.profile?.created_at ? formatFullDate(p.profile.created_at) : "Not recorded"}</Field>
               <div className="col-span-2">
-                <Field label="Emergency contact">{p.emergency_contact ?? "—"}</Field>
+                <Field label="Emergency contact">{p.emergency_contact ?? "Not recorded"}</Field>
               </div>
               {p.profile?.phone ? (
                 <div className="col-span-2">
@@ -118,12 +120,10 @@ export function PatientDetailView() {
               <ul className="space-y-1">
                 {upcoming.map((v) => (
                   <li key={v.id}>
-                    <Link href={`/visits/${v.id}`} className="-mx-2 flex items-center justify-between gap-3 rounded-lg px-2 py-2 hover:bg-surface-2">
+                    <Link href={`/visits/${v.id}`} className="-mx-2.5 flex items-center justify-between gap-3 rounded-[10px] px-2.5 py-2.5 transition-colors hover:bg-surface-2">
                       <span className="min-w-0">
-                        <span className="block text-sm font-medium text-ink">{v.service_type}</span>
-                        <span className="block text-xs text-muted">
-                          {formatWhen(v.scheduled_start, now)} · {v.clinician ? shortName(v.clinician.full_name) : "Unassigned"}
-                        </span>
+                        <span className="block text-[14px] font-medium text-ink">{v.service_type}</span>
+                        <Meta className="mt-0.5 flex text-xs text-muted" parts={[formatWhen(v.scheduled_start, now), v.clinician ? shortName(v.clinician.full_name) : "Unassigned"]} />
                       </span>
                       <StatusBadge status={v.status} />
                     </Link>
@@ -151,17 +151,17 @@ export function PatientDetailView() {
 
 function VisitResults({ visits, now }: { visits: VisitFull[]; now: number }) {
   return (
-    <Card title="Visit results" subtitle="Vitals recorded at each visit — what the patient sees in their app">
+    <Card title="Visit results" subtitle="Vitals recorded at each visit, as the patient sees them in their app">
       {visits.length === 0 ? (
         <EmptyState icon={HeartPulse} title="No results yet" body="Vitals appear here after a clinician completes a visit." />
       ) : (
-        <div className="-mx-5 overflow-x-auto">
+        <div className="-mx-6 overflow-x-auto">
           <table className="w-full min-w-[720px] text-sm">
             <caption className="sr-only">Visit results</caption>
             <thead>
               <tr className="border-b border-line text-left text-xs text-muted">
                 {["Visit", "Blood pressure", "Pulse", "Temp", "SpO₂", "Glucose", "Notes"].map((h) => (
-                  <th key={h} scope="col" className="px-3 py-2 font-medium first:pl-5 last:pr-5">
+                  <th key={h} scope="col" className="px-3 pt-1 pb-2.5 font-medium first:pl-6 last:pr-6">
                     {h}
                   </th>
                 ))}
@@ -174,37 +174,35 @@ function VisitResults({ visits, now }: { visits: VisitFull[]; now: number }) {
                 const get = (label: string) => list.find((x) => x.label === label);
                 return (
                   <tr key={v.id} className="border-b border-line align-top last:border-0">
-                    <td className="px-3 py-2.5 pl-5">
+                    <td className="px-3 py-3.5 pl-6">
                       <Link href={`/visits/${v.id}`} className="font-medium whitespace-nowrap text-ink hover:underline">
                         {formatWhen(v.scheduled_start, now)}
                       </Link>
-                      <div className="text-xs text-muted">
-                        {v.service_type} · {shortName(v.clinician?.full_name)}
-                      </div>
+                      <Meta className="mt-0.5 flex text-xs whitespace-nowrap text-muted" parts={[v.service_type, shortName(v.clinician?.full_name)]} />
                     </td>
                     {["Blood pressure", "Pulse", "Temperature", "Oxygen (SpO₂)", "Blood glucose"].map((label) => {
                       const x = get(label);
                       return (
-                        <td key={label} className="px-3 py-2.5 whitespace-nowrap tabular-nums">
+                        <td key={label} className="px-3 py-3.5 whitespace-nowrap tabular-nums">
                           {x ? (
                             <span className={cx("inline-flex items-center gap-1", x.outside ? "font-medium text-warning-text" : "text-ink")} title={x.outside ? `Outside typical range (${x.range})` : undefined}>
                               {x.outside ? <TriangleAlert className="size-3.5" aria-label="Outside typical range" /> : null}
                               {x.value} <span className="text-xs font-normal text-muted">{x.unit}</span>
                             </span>
                           ) : (
-                            <span className="text-faint">—</span>
+                            <Nil />
                           )}
                         </td>
                       );
                     })}
-                    <td className="max-w-64 px-3 py-2.5 pr-5 text-[13px] text-ink-2">
+                    <td className="max-w-64 px-3 py-3.5 pr-6 text-[13px] text-ink-2">
                       {r.notes ? (
                         <span className="line-clamp-2" title={r.notes}>
                           <FileText className="mr-1 inline size-3.5 text-muted" aria-hidden />
                           {r.notes}
                         </span>
                       ) : (
-                        <span className="text-faint">—</span>
+                        <Nil />
                       )}
                     </td>
                   </tr>
@@ -223,7 +221,7 @@ function VisitResults({ visits, now }: { visits: VisitFull[]; now: number }) {
 function VitalsTrends({ visits }: { visits: VisitFull[] }) {
   const reports = visits.map((v) => ({ v, r: reportOf(v) as VisitReport }));
   const labels = reports.map(({ v }) => formatShortDay(v.scheduled_start));
-  const titles = reports.map(({ v }) => `${formatWhen(v.scheduled_start)} · ${v.service_type}`);
+  const titles = reports.map(({ v }) => `${formatWhen(v.scheduled_start)}, ${v.service_type}`);
   const pick = (f: (r: VisitReport) => number | null) => reports.map(({ r }) => (f(r) == null ? null : Number(f(r))));
   const count = (vals: (number | null)[]) => vals.filter((x) => x != null).length;
 
@@ -260,17 +258,17 @@ function VitalsTrends({ visits }: { visits: VisitFull[] }) {
   if (charts.length === 0) return null;
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
+    <div className="grid gap-5 md:grid-cols-2">
       {charts.map((c) => (
         <ChartFrame
           key={c.key}
           title={c.title}
-          subtitle={`${c.unit} · per visit`}
+          subtitle={`${c.unit} per visit`}
           legend={c.series.length > 1 ? c.series.map((s) => ({ label: s.label, color: s.color, mark: "line" as const })) : undefined}
           table={{
             columns: ["Visit", ...c.series.map((s) => `${s.label} (${c.unit})`)],
             numeric: [false, ...c.series.map(() => true)],
-            rows: titles.map((t, i) => [t, ...c.series.map((s) => (s.values[i] == null ? "—" : (c.format ?? String)(s.values[i] as number)))]),
+            rows: titles.map((t, i) => [t, ...c.series.map((s) => (s.values[i] == null ? "None" : (c.format ?? String)(s.values[i] as number)))]),
           }}
         >
           <TrendChart

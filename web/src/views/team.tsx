@@ -7,7 +7,7 @@ import { useState } from "react";
 import { ChartFrame } from "@/components/charts/core";
 import { RankedBars } from "@/components/charts/ranked-bars";
 import { useConsole } from "@/components/console-data";
-import { Avatar, Badge, Card, cx, EmptyState, ErrorNote, PageHeader, Segmented, Spinner } from "@/components/ui";
+import { Avatar, Badge, Card, cx, EmptyState, ErrorNote, Meta, Nil, PageHeader, Segmented, Spinner } from "@/components/ui";
 import { formatDuration, formatHours, formatPct, formatTime, formatWhen, roleLabel } from "@/lib/format";
 import { useNow } from "@/lib/live";
 import { clinicianStats, periodOf, RANGES, type RangeKey } from "@/lib/metrics";
@@ -15,7 +15,7 @@ import { patientName } from "@/lib/visits";
 
 /** A rate against its target: below target shows an icon and amber text, never colour alone. */
 function Rate({ value, target }: { value: number | null; target: number }) {
-  if (value == null) return <span className="text-faint">—</span>;
+  if (value == null) return <Nil />;
   if (value >= target) return <span className="text-ink">{formatPct(value)}</span>;
   return (
     <span className="inline-flex items-center gap-1 text-warning-text" title={`Below the ${Math.round(target * 100)}% target`}>
@@ -44,7 +44,7 @@ export function TeamView() {
     <>
       <PageHeader
         title="Team"
-        subtitle={`${data.clinicians.length} clinicians · ${onVisit} on a visit now`}
+        subtitle={`${data.clinicians.length} clinicians, ${onVisit} on a visit now`}
         actions={<Segmented label="Date range" value={rangeKey} onChange={setRangeKey} options={RANGES.map((r) => ({ value: r.key, label: r.short }))} />}
       />
 
@@ -52,7 +52,7 @@ export function TeamView() {
         {stats.length === 0 ? (
           <EmptyState icon={Stethoscope} title="No clinicians yet" body="Doctor and nurse accounts are created by the office." />
         ) : (
-          <div className="-mx-5 overflow-x-auto">
+          <div className="-mx-6 overflow-x-auto">
             <table className="w-full min-w-[920px] text-sm">
               <caption className="sr-only">Clinicians</caption>
               <thead>
@@ -67,7 +67,7 @@ export function TeamView() {
                     ["Time to accept", true],
                     ["Declined", true],
                   ].map(([h, num]) => (
-                    <th key={h as string} scope="col" className={cx("px-3 py-2 font-medium first:pl-5 last:pr-5", num && "text-right")}>
+                    <th key={h as string} scope="col" className={cx("px-3 pt-1 pb-2.5 font-medium whitespace-nowrap first:pl-6 last:pr-6", num && "text-right")}>
                       {h}
                     </th>
                   ))}
@@ -75,73 +75,71 @@ export function TeamView() {
               </thead>
               <tbody>
                 {stats.map((s) => (
-                  <tr key={s.clinician.id} className="border-b border-line last:border-0">
-                    <td className="px-3 py-2.5 pl-5">
-                      <div className="flex items-center gap-2.5">
-                        <Avatar name={s.clinician.full_name} size={30} />
+                  <tr key={s.clinician.id} className="border-b border-line transition-colors last:border-0 hover:bg-surface-2">
+                    <td className="px-3 py-4 pl-6">
+                      <div className="flex items-center gap-3">
+                        <Avatar name={s.clinician.full_name} size={36} />
                         <div className="min-w-0">
-                          <div className="font-medium text-ink">{s.clinician.full_name}</div>
-                          <div className="text-xs text-muted">
-                            {roleLabel(s.clinician.role)}
-                            {s.clinician.specialty ? ` · ${s.clinician.specialty}` : ""}
-                            {s.clinician.phone ? (
-                              <>
-                                {" · "}
-                                <a href={`tel:${s.clinician.phone.replace(/\s/g, "")}`} className="inline-flex items-center gap-0.5 text-brand hover:underline">
+                          <div className="text-[15px] font-medium text-ink">{s.clinician.full_name}</div>
+                          <Meta
+                            className="mt-0.5 text-xs text-muted"
+                            parts={[
+                              roleLabel(s.clinician.role),
+                              s.clinician.specialty,
+                              s.clinician.phone ? (
+                                <a href={`tel:${s.clinician.phone.replace(/\s/g, "")}`} className="inline-flex items-center gap-1 text-brand hover:underline">
                                   <Phone className="size-3" aria-hidden />
                                   {s.clinician.phone}
                                 </a>
-                              </>
-                            ) : null}
-                          </div>
+                              ) : null,
+                            ]}
+                          />
                         </div>
                       </div>
                     </td>
-                    <td className="px-3 py-2.5">
+                    <td className="px-3 py-4">
                       {s.current ? (
                         <Link href={`/visits/${s.current.id}`} className="group block">
                           <Badge tone="good" lead={<span className="live-dot mr-0.5" aria-hidden />}>
                             On visit
                           </Badge>
-                          <div className="mt-0.5 text-xs text-muted group-hover:underline">
-                            {patientName(s.current)} · {s.current.started_at ? formatDuration(now - new Date(s.current.started_at).getTime()) : formatTime(s.current.started_at)}
-                          </div>
+                          <Meta
+                            className="mt-1 text-xs text-muted group-hover:underline"
+                            parts={[patientName(s.current), s.current.started_at ? formatDuration(now - new Date(s.current.started_at).getTime()) : formatTime(s.current.started_at)]}
+                          />
                         </Link>
                       ) : s.next ? (
                         <Link href={`/visits/${s.next.id}`} className="block text-[13px] text-ink-2 hover:underline">
                           Next: {formatWhen(s.next.scheduled_start, now)}
-                          <div className="text-xs text-muted">
-                            {patientName(s.next)}
-                            {s.next.status === "requested" ? " · not accepted yet" : ""}
-                          </div>
+                          <Meta className="mt-0.5 flex text-xs text-muted" parts={[patientName(s.next), s.next.status === "requested" ? "not accepted yet" : null]} />
                         </Link>
                       ) : (
                         <span className="text-[13px] text-muted">Free</span>
                       )}
                     </td>
-                    <td className="px-3 py-2.5 text-right tabular-nums">{s.completed}</td>
-                    <td className="px-3 py-2.5 text-right tabular-nums">{formatHours(s.careMs)}</td>
-                    <td className="px-3 py-2.5 text-right tabular-nums">
+                    <td className="px-3 py-4 text-right text-[15px] tabular-nums">{s.completed}</td>
+                    <td className="px-3 py-4 text-right text-[15px] tabular-nums">{formatHours(s.careMs)}</td>
+                    <td className="px-3 py-4 text-right text-[15px] tabular-nums">
                       <Rate value={s.verifiedRate} target={0.9} />
                     </td>
-                    <td className="px-3 py-2.5 text-right tabular-nums">
+                    <td className="px-3 py-4 text-right text-[15px] tabular-nums">
                       <Rate value={s.onTimeRate} target={0.8} />
                     </td>
-                    <td className="px-3 py-2.5 text-right tabular-nums">{s.medianAcceptMin == null ? "—" : `${Math.round(s.medianAcceptMin)} min`}</td>
-                    <td className="px-3 py-2.5 pr-5 text-right tabular-nums">{s.declined}</td>
+                    <td className="px-3 py-4 text-right text-[15px] tabular-nums">{s.medianAcceptMin == null ? <Nil /> : `${Math.round(s.medianAcceptMin)} min`}</td>
+                    <td className="px-3 py-4 pr-6 text-right text-[15px] tabular-nums">{s.declined}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         )}
-        <p className="mt-4 text-xs text-muted">
+        <p className="mt-2 -mb-1 border-t border-line pt-4 text-xs leading-relaxed text-muted">
           Location-verified: both clock-ins inside the patient&apos;s home area with good GPS (target 90%). On time: clocked in within 15 minutes of the booking.
           Figures below target are marked with a warning sign.
         </p>
       </Card>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+      <div className="mt-5 grid gap-5 lg:grid-cols-2">
         <ChartFrame
           title="Hours on site"
           subtitle={range.label}

@@ -36,8 +36,8 @@ export const dayKey = (v: string | number | Date) => {
 
 export const sameDay = (a: string | number | Date, b: string | number | Date) => dayKey(a) === dayKey(b);
 
-export const formatTime = (v: string | null | undefined) => (v ? timeFmt.format(toDate(v)) : "—");
-export const formatSeconds = (v: string | null | undefined) => (v ? secondsFmt.format(toDate(v)) : "—");
+export const formatTime = (v: string | null | undefined) => (v ? timeFmt.format(toDate(v)) : "n/a");
+export const formatSeconds = (v: string | null | undefined) => (v ? secondsFmt.format(toDate(v)) : "n/a");
 export const formatShortDay = (v: string | Date) => shortDayFmt.format(toDate(v));
 export const formatWeekday = (v: string | Date) => weekdayFmt.format(toDate(v));
 export const formatLongDay = (v: string | Date) => longDayFmt.format(toDate(v));
@@ -88,7 +88,7 @@ export function formatClock(ms: number) {
 }
 
 export function formatDistance(m: number | null | undefined) {
-  if (m == null) return "—";
+  if (m == null) return "n/a";
   if (m < 1000) return `${Math.round(m)} m`;
   return `${(m / 1000).toFixed(m < 10_000 ? 1 : 0)} km`;
 }
@@ -98,7 +98,7 @@ export const formatInt = (n: number) => intFmt.format(Math.round(n));
 /** 1,284 · 12.9K · 4.2M — full under 10,000 */
 export const formatCompact = (n: number) => (Math.abs(n) < 10_000 ? intFmt.format(Math.round(n)) : compactFmt.format(n));
 
-export const formatPct = (ratio: number | null) => (ratio == null ? "—" : `${Math.round(ratio * 100)}%`);
+export const formatPct = (ratio: number | null) => (ratio == null ? "n/a" : `${Math.round(ratio * 100)}%`);
 
 export function formatHours(ms: number) {
   const h = ms / HOUR;

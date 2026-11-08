@@ -10,7 +10,7 @@ import { AssignControl } from "@/components/assign-control";
 import { useConsole } from "@/components/console-data";
 import { MapLegend, MapView, type MapCircle, type MapPin } from "@/components/map";
 import { FlagList, StatusBadge, VerificationBadge } from "@/components/status";
-import { Avatar, BackLink, Button, Card, cx, EmptyState, ErrorNote, PageHeader, Spinner } from "@/components/ui";
+import { Avatar, BackLink, Button, Card, cx, EmptyState, ErrorNote, Meta, PageHeader, Spinner } from "@/components/ui";
 import { VitalsGrid } from "@/components/vitals";
 import {
   errorMessage,
@@ -73,24 +73,27 @@ export function VisitDetailView() {
     <>
       <PageHeader
         back={<BackLink href="/visits">Visits</BackLink>}
-        title={`${v.service_type} · ${patientName(v)}`}
+        title={`${v.service_type} for ${patientName(v)}`}
         subtitle={
-          <>
-            {formatWhen(v.scheduled_start, now)} · booked for {v.duration_minutes} min
-            {v.status === "completed" && v.started_at ? ` · ${formatDuration(actualMs(v))} on site` : ""}
-            {late != null && late > 15 ? ` · arrived ${late} min late` : ""}
-          </>
+          <Meta
+            parts={[
+              formatWhen(v.scheduled_start, now),
+              `booked for ${v.duration_minutes} min`,
+              v.status === "completed" && v.started_at ? `${formatDuration(actualMs(v))} on site` : null,
+              late != null && late > 15 ? `arrived ${late} min late` : null,
+            ]}
+          />
         }
         actions={
           <>
             <StatusBadge status={v.status} />
-            <VerificationBadge value={verification} flags={visitFlags(v)} />
+            {verification !== "none" ? <VerificationBadge value={verification} flags={visitFlags(v)} /> : null}
           </>
         }
       />
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="space-y-4 lg:col-span-2">
+      <div className="grid items-start gap-5 lg:grid-cols-3">
+        <div className="space-y-5 lg:col-span-2">
           <LocationCard v={v} />
           <Card title="Visit report" subtitle={reportOf(v) ? `Recorded by ${v.clinician?.full_name ?? "the clinician"} at clock-out` : undefined}>
             {reportOf(v) ? (
@@ -103,7 +106,7 @@ export function VisitDetailView() {
           </Card>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-5">
           <PeopleCard v={v} />
           <ActionsCard v={v} clinicians={consoleData?.clinicians ?? []} onChanged={refresh} />
           <Card title="Timeline">
@@ -156,8 +159,8 @@ function LocationCard({ v }: { v: VisitFull }) {
       lat: e.lat,
       lng: e.lng,
       kind: e.verified ? "ok" : "flag",
-      label: `${what} · ${formatTime(e.occurred_at)}`,
-      sublabel: `${formatDistance(e.distance_m)} from home · GPS ±${formatDistance(e.accuracy_m)}`,
+      label: `${what} at ${formatTime(e.occurred_at)}`,
+      sublabel: `${formatDistance(e.distance_m)} from home, GPS ±${formatDistance(e.accuracy_m)}`,
     });
     if (e.accuracy_m) circles.push({ id: `acc:${e.id}`, lat: e.lat, lng: e.lng, radius: e.accuracy_m, kind: e.verified ? "accuracy" : "accuracy-flag" });
   }
@@ -172,7 +175,7 @@ function LocationCard({ v }: { v: VisitFull }) {
             ? "Measured against an earlier home pin that wasn't recorded"
             : "The patient hasn't pinned their home, so clock-ins can't be location-verified"
       }
-      bodyClassName="px-5 pt-3 pb-5"
+      bodyClassName="px-0 pt-4 pb-6"
     >
       {pins.length ? (
         <>
@@ -181,21 +184,21 @@ function LocationCard({ v }: { v: VisitFull }) {
             circles={circles}
             ariaLabel="Map of the patient's home area and where the clinician clocked in and out"
             fitKey={`${v.id}:${pins.length}`}
-            className="h-[300px] w-full overflow-hidden rounded-lg"
+            className="h-[340px] w-full overflow-hidden border-y border-line"
           />
-          <div className="mt-3">
+          <div className="mt-3 px-6">
             <MapLegend
               items={[
                 ...(home ? [{ kind: "home" as const, label: "Pinned home (shaded: verified area)" }] : []),
-                { kind: "ok" as const, label: "Clock point · verified" },
-                { kind: "flag" as const, label: "Clock point · flagged" },
+                { kind: "ok" as const, label: "Clock point, verified" },
+                { kind: "flag" as const, label: "Clock point, flagged" },
               ]}
             />
           </div>
         </>
       ) : null}
       {movedOn ? (
-        <p className="mt-3 flex items-start gap-2 rounded-lg bg-surface-2 px-3 py-2 text-[13px] text-ink-2">
+        <p className="mt-4 flex items-start gap-2 px-6 text-[13px] text-ink-2">
           <MapPinOff className="mt-0.5 size-3.5 shrink-0 text-muted" aria-hidden />
           <span>
             {patientName(v)} moved their home pin after this visit ({formatWhen(movedOn)}).{" "}
@@ -203,7 +206,7 @@ function LocationCard({ v }: { v: VisitFull }) {
           </span>
         </p>
       ) : null}
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+      <div className="mx-6 mt-5 grid gap-6 border-t border-line pt-5 sm:grid-cols-2 sm:gap-0 sm:divide-x sm:divide-line">
         <EventPanel title="Clock-in" e={cin} v={v} />
         <EventPanel title="Clock-out" e={cout} v={v} />
       </div>
@@ -225,8 +228,8 @@ function Check({ ok, icon, children }: { ok: boolean | null; icon?: ReactNode; c
 function EventPanel({ title, e, v }: { title: string; e: VisitEvent | null; v: VisitFull }) {
   if (!e) {
     return (
-      <div className="rounded-lg border border-dashed border-line-strong px-4 py-3">
-        <div className="text-sm font-medium text-ink">{title}</div>
+      <div className="sm:px-6 sm:first:pl-0 sm:last:pr-0">
+        <div className="text-[15px] font-medium text-ink">{title}</div>
         <p className="mt-1 text-[13px] text-muted">
           {v.status === "completed"
             ? "Waiting for the phone to sync."
@@ -242,10 +245,11 @@ function EventPanel({ title, e, v }: { title: string; e: VisitEvent | null; v: V
   const skewMin = e.device_time ? Math.round((new Date(e.device_time).getTime() - new Date(e.received_at).getTime()) / MS.MIN) : null;
   const radius = e.geofence_radius_m ?? v.patient?.geofence_radius_m ?? 150;
   return (
-    <div className={cx("rounded-lg border px-4 py-3", e.verified ? "border-line" : "border-warning")}>
+    <div className="sm:px-6 sm:first:pl-0 sm:last:pr-0">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-medium text-ink">
-          {title} · <span className="tabular-nums">{formatSeconds(e.occurred_at)}</span>
+        <span className="text-[15px] font-medium text-ink">
+          {title}
+          <span className="ml-2.5 font-normal text-muted tabular-nums">{formatSeconds(e.occurred_at)}</span>
         </span>
         {e.verified ? (
           <span className="inline-flex items-center gap-1 text-xs font-medium text-good-text">
@@ -257,7 +261,7 @@ function EventPanel({ title, e, v }: { title: string; e: VisitEvent | null; v: V
           </span>
         )}
       </div>
-      <ul className="mt-2 space-y-1.5">
+      <ul className="mt-3 space-y-2">
         {e.distance_m != null ? (
           <Check ok={!e.flags.includes("outside_area")}>
             {formatDistance(e.distance_m)} from the pinned home {e.flags.includes("outside_area") ? `(outside the ${radius} m area)` : `(inside the ${radius} m area)`}
@@ -272,7 +276,7 @@ function EventPanel({ title, e, v }: { title: string; e: VisitEvent | null; v: V
         ) : null}
         <Check ok={e.is_mocked ? false : e.is_mocked === false ? true : null} icon={e.is_mocked ? undefined : <Smartphone className="size-3.5" aria-hidden />}>
           {e.is_mocked ? "A fake-GPS app was detected on the phone" : e.is_mocked === false ? "No fake-GPS app detected" : "Phone didn't report fake-GPS status"}
-          {e.platform ? ` · ${e.platform === "ios" ? "iPhone" : e.platform === "android" ? "Android" : e.platform}` : ""}
+          {e.platform ? ` (${e.platform === "ios" ? "iPhone" : e.platform === "android" ? "Android" : e.platform})` : ""}
         </Check>
         {e.was_offline ? (
           <Check ok={null} icon={<CloudOff className="size-3.5" aria-hidden />}>
@@ -304,7 +308,7 @@ function PeopleCard({ v }: { v: VisitFull }) {
         <div className="flex items-start gap-3">
           <Avatar name={patientName(v)} size={36} />
           <div className="min-w-0 flex-1">
-            <Link href={`/patients/${v.patient_id}`} className="text-sm font-medium text-ink hover:underline">
+            <Link href={`/patients/${v.patient_id}`} className="text-[15px] font-medium text-ink hover:underline">
               {patientName(v)}
             </Link>
             <div className="text-xs text-muted">Patient</div>
@@ -315,8 +319,8 @@ function PeopleCard({ v }: { v: VisitFull }) {
         <div className="flex items-start gap-3 border-t border-line pt-4">
           {c ? <Avatar name={c.full_name} size={36} /> : <span className="size-9 shrink-0 rounded-full border border-dashed border-line-strong" />}
           <div className="min-w-0 flex-1">
-            <div className="text-sm font-medium text-ink">{c?.full_name ?? "No clinician yet"}</div>
-            <div className="text-xs text-muted">{c ? `${roleLabel(c.role)}${c.specialty ? ` · ${c.specialty}` : ""}` : "Open request — any suitable clinician can accept"}</div>
+            <div className="text-[15px] font-medium text-ink">{c?.full_name ?? "No clinician yet"}</div>
+            {c ? <Meta className="text-xs text-muted" parts={[roleLabel(c.role), c.specialty]} /> : <div className="text-xs text-muted">Open request: any suitable clinician can accept</div>}
             {c?.phone ? <PhoneLink phone={c.phone} /> : null}
           </div>
         </div>
@@ -333,7 +337,7 @@ function PeopleCard({ v }: { v: VisitFull }) {
 
 function PhoneLink({ phone }: { phone: string }) {
   return (
-    <a href={`tel:${phone.replace(/\s/g, "")}`} className="mt-1 inline-flex items-center gap-1 text-[13px] text-brand hover:underline">
+    <a href={`tel:${phone.replace(/\s/g, "")}`} className="mt-1 flex w-fit items-center gap-1 text-[13px] text-brand hover:underline">
       <Phone className="size-3.5" aria-hidden /> {phone}
     </a>
   );
@@ -387,7 +391,7 @@ function ActionsCard({ v, clinicians, onChanged }: { v: VisitFull; clinicians: C
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   placeholder="e.g. Patient admitted to hospital"
-                  className="h-9 w-full rounded-lg border border-line-strong bg-surface px-3 text-sm text-ink placeholder:text-faint"
+                  className="h-9 w-full rounded-[9px] border border-line-strong bg-surface px-3 text-sm text-ink placeholder:text-faint"
                 />
                 <div className="flex gap-2">
                   <Button variant="danger" size="sm" icon={Ban} loading={busy} onClick={() => void cancel()}>
@@ -428,11 +432,8 @@ function Timeline({ v, activity, clinicians }: { v: VisitFull; activity: Activit
             >
               <Icon className="size-3" aria-hidden />
             </span>
-            <div className="text-[13px] text-ink">{line.text}</div>
-            <div className="text-xs text-muted tabular-nums">
-              {formatWhen(a.created_at)}
-              {line.note ? ` · ${line.note}` : ""}
-            </div>
+            <div className="text-[14px] leading-snug text-ink">{line.text}</div>
+            <Meta className="mt-0.5 text-xs text-muted tabular-nums" parts={[formatWhen(a.created_at), ...(line.note ? line.note.split(" · ") : [])]} />
           </li>
         );
       })}

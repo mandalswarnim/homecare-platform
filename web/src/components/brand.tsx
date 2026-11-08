@@ -14,9 +14,9 @@ export function BrandName({ sub = "Console" }: { sub?: string }) {
   return (
     <span className="flex items-center gap-2.5">
       <BrandMark />
-      <span className="leading-tight">
-        <span className="block text-[15px] font-semibold text-ink">{BRAND}</span>
-        <span className="block text-[11px] tracking-wide text-muted uppercase">{sub}</span>
+      <span className="leading-none">
+        <span className="block font-display text-[19px] text-ink">{BRAND}</span>
+        <span className="mt-0.5 block text-xs text-muted">{sub}</span>
       </span>
     </span>
   );

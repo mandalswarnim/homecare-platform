@@ -37,12 +37,11 @@ function NavLinks({ pathname, layout }: { pathname: string | null; layout: "side
             href={href}
             aria-current={on ? "page" : undefined}
             className={cx(
-              "flex items-center gap-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors",
-              layout === "side" ? "h-9 px-3" : "h-9 px-3",
-              on ? "bg-surface-3 text-ink" : "text-ink-2 hover:bg-surface-2 hover:text-ink",
+              "flex h-9 items-center gap-3 rounded-[9px] px-3 text-[14px] font-medium whitespace-nowrap transition-colors",
+              on ? "bg-surface text-ink shadow-panel" : "text-ink-2 hover:bg-surface-3/60 hover:text-ink",
             )}
           >
-            <Icon className="size-4" aria-hidden />
+            <Icon className={cx("size-4", on ? "text-brand" : "text-muted")} aria-hidden strokeWidth={1.8} />
             {label}
           </Link>
         );
@@ -71,7 +70,7 @@ function LiveStatus() {
   if (error && updatedAt)
     return (
       <span className="inline-flex items-center gap-2 text-xs text-warning-text" title={error}>
-        <span aria-hidden className="size-2 rounded-full bg-warning" /> Reconnecting · data from {formatTime(new Date(updatedAt).toISOString())}
+        <span aria-hidden className="size-2 rounded-full bg-warning" /> Reconnecting, showing data from {formatTime(new Date(updatedAt).toISOString())}
       </span>
     );
   return live ? (
@@ -93,7 +92,7 @@ function ThemeToggle() {
     { value: "dark", label: "Dark", icon: Moon },
   ];
   return (
-    <div role="radiogroup" aria-label="Theme" className="inline-flex rounded-lg border border-line p-0.5">
+    <div role="radiogroup" aria-label="Theme" className="inline-flex rounded-[9px] bg-surface-3/70 p-0.5">
       {options.map(({ value, label, icon: Icon }) => (
         <button
           key={value}
@@ -107,8 +106,8 @@ function ThemeToggle() {
             applyTheme(value);
           }}
           className={cx(
-            "flex size-7 items-center justify-center rounded-md",
-            choice === value ? "bg-surface-3 text-ink" : "text-muted hover:bg-surface-2 hover:text-ink",
+            "flex size-7 items-center justify-center rounded-[7px] transition-colors",
+            choice === value ? "bg-surface text-ink shadow-panel" : "text-muted hover:text-ink",
           )}
         >
           <Icon className="size-3.5" aria-hidden />
@@ -132,7 +131,7 @@ function UserBlock({ compact }: { compact?: boolean }) {
       <button
         type="button"
         onClick={() => void signOut()}
-        className="flex size-8 items-center justify-center rounded-lg text-muted hover:bg-surface-2 hover:text-ink"
+        className="flex size-8 items-center justify-center rounded-[9px] text-muted transition-colors hover:bg-surface-3/60 hover:text-ink"
         aria-label="Sign out"
         title="Sign out"
       >
@@ -144,26 +143,24 @@ function UserBlock({ compact }: { compact?: boolean }) {
 
 export function Shell({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-dvh lg:pl-60">
-      <aside className="fixed inset-y-0 left-0 z-[1100] hidden w-60 flex-col border-r border-line bg-surface px-3 py-4 lg:flex">
-        <div className="px-2 pb-5">
+    <div className="min-h-dvh lg:pl-64">
+      <aside className="fixed inset-y-0 left-0 z-[1100] hidden w-64 flex-col border-r border-line bg-rail px-4 py-6 lg:flex">
+        <div className="px-2 pb-8">
           <BrandName />
         </div>
         <Nav layout="side" />
-        <div className="mt-auto space-y-4 px-2">
-          <div>
+        <div className="mt-auto space-y-5 px-2">
+          <div className="flex items-center justify-between gap-3">
             <LiveStatus />
-          </div>
-          <div>
             <ThemeToggle />
           </div>
-          <div className="border-t border-line pt-4">
+          <div className="border-t border-line pt-5">
             <UserBlock />
           </div>
         </div>
       </aside>
 
-      <header className="sticky top-0 z-[1100] border-b border-line bg-surface/95 backdrop-blur lg:hidden">
+      <header className="sticky top-0 z-[1100] border-b border-line bg-rail/95 backdrop-blur lg:hidden">
         <div className="flex items-center justify-between gap-3 px-4 pt-3 pb-2">
           <BrandName />
           <div className="flex items-center gap-3">
@@ -176,7 +173,7 @@ export function Shell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</main>
+      <main className="mx-auto w-full max-w-[1360px] px-4 py-7 sm:px-6 lg:px-10 lg:py-10">{children}</main>
     </div>
   );
 }
