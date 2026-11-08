@@ -102,7 +102,7 @@ export function LeafletMap({ pins, circles = [], ariaLabel, fitKey, onSelect, cl
       const marker = L.marker([p.lat, p.lng], {
         icon: pinIcon(p),
         keyboard: true,
-        title: p.sublabel ? `${p.label} — ${p.sublabel}` : p.label,
+        title: p.sublabel ? `${p.label}: ${p.sublabel}` : p.label,
         alt: p.label,
         zIndexOffset: p.kind === "live" ? 1000 : p.kind === "flag" ? 500 : 0,
         riseOnHover: true,

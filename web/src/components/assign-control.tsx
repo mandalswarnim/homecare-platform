@@ -42,7 +42,7 @@ export function AssignControl({ visit, clinicians, onDone }: { visit: VisitFull;
     }
   }
 
-  if (sentTo) return <p className="text-[13px] text-good-text">Sent to {sentTo} — waiting for them to accept.</p>;
+  if (sentTo) return <p className="text-[13px] text-good-text">Sent to {sentTo}. Waiting for them to accept.</p>;
 
   return (
     <div className="flex flex-col gap-1">

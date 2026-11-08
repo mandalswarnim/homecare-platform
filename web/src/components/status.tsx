@@ -18,7 +18,7 @@ import type { Severity } from "@/lib/attention";
 import type { VisitStatus } from "@/lib/types";
 import { flagText, STATUS_LABEL, type Verification } from "@/lib/visits";
 
-import { Badge, cx, type Tone } from "./ui";
+import { Badge, cx, Nil, type Tone } from "./ui";
 
 const STATUS_STYLE: Record<VisitStatus, { tone: Tone; icon?: LucideIcon }> = {
   requested: { tone: "info", icon: Hourglass },
@@ -39,7 +39,7 @@ export function StatusBadge({ status }: { status: VisitStatus }) {
 }
 
 export function VerificationBadge({ value, flags = [] }: { value: Verification; flags?: string[] }) {
-  if (value === "none") return <span className="text-xs text-faint">—</span>;
+  if (value === "none") return <Nil />;
   if (value === "verified")
     return (
       <Badge tone="good" icon={ShieldCheck} title="Clock-in and clock-out were inside the patient's home area">
@@ -53,7 +53,7 @@ export function VerificationBadge({ value, flags = [] }: { value: Verification; 
       </Badge>
     );
   return (
-    <Badge tone="warning" icon={ShieldAlert} title={flags.map(flagText).join(" · ") || "Needs review"}>
+    <Badge tone="warning" icon={ShieldAlert} title={flags.map(flagText).join(", ") || "Needs review"}>
       Needs review
     </Badge>
   );

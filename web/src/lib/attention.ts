@@ -35,7 +35,7 @@ export function needsAttention(visits: VisitFull[], now: number): AttentionItem[
       items.push({
         id: `${v.id}:declined`,
         severity: start - now < 6 * MS.HOUR ? "critical" : "serious",
-        title: `Declined by ${clinician} — needs someone else`,
+        title: `Declined by ${clinician}, needs someone else`,
         detail: `${patient} · ${v.service_type} · ${when}${v.decline_reason ? ` · “${v.decline_reason}”` : ""}`,
         visit: v,
         action: "assign",
@@ -45,7 +45,7 @@ export function needsAttention(visits: VisitFull[], now: number): AttentionItem[
       items.push({
         id: `${v.id}:open`,
         severity: start - now < 3 * MS.HOUR ? "critical" : "warning",
-        title: "Open request — no clinician has accepted yet",
+        title: "Open request: no clinician has accepted yet",
         detail: `${patient} · ${v.service_type} · ${when} · asked ${timeAgo(v.created_at, now)}`,
         visit: v,
         action: "assign",
@@ -66,7 +66,7 @@ export function needsAttention(visits: VisitFull[], now: number): AttentionItem[
       items.push({
         id: `${v.id}:late`,
         severity: "critical",
-        title: `${clinician} hasn't clocked in — ${formatDuration(now - start)} late`,
+        title: `${clinician} hasn't clocked in, ${formatDuration(now - start)} late`,
         detail: `${patient} · ${v.service_type} · was due ${when}`,
         visit: v,
         action: "call",
@@ -78,7 +78,7 @@ export function needsAttention(visits: VisitFull[], now: number): AttentionItem[
         items.push({
           id: `${v.id}:overrun`,
           severity: "warning",
-          title: `Running long — ${clinician} on site for ${formatDuration(onSite)}`,
+          title: `Running long: ${clinician} on site for ${formatDuration(onSite)}`,
           detail: `${patient} · ${v.service_type} · booked for ${v.duration_minutes} min`,
           visit: v,
           action: "call",

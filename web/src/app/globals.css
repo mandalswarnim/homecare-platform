@@ -1,69 +1,88 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: brand · redesign: full
+ * paper: oklch(96.2% 0.005 90) · accent: oklch(51% 0.09 183) · display: Newsreader · body: Hanken Grotesk
+ * nav: kept (sidebar, four destinations) · signature: the needs-attention queue, leading the overview · states: loading, error, empty, full
+ * axes: light/roman-serif/chromatic-teal · posture: queue-first · contrast: pass · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H4 E4 S4 R3 V4 · weakest: R, the chart palette stays blue/orange because docs/PLAN.md validates it for colour-blind separation */
+/* Hallmark · dismissed 40 · .map-pin-ok carries a white glyph on the series blue, a graphic held to 3:1, not text */
+/* Hallmark · answered F24 · the map tooltip keeps its hairline because the map tiles behind it vary */
 @import "tailwindcss";
+@import "./tokens.css" layer(base);
+@import "./base.css" layer(base);
 
 /*
- * Design tokens. Light is the default; dark is selected with its own steps (not an automatic
- * flip): it follows the OS setting unless the viewer picked a theme, which sets data-theme.
- * Chart series colours come from a palette validated for colour-blind separation and contrast
- * in both modes — keep them in sync with docs/PLAN.md if you change them.
+ * Design tokens (the project's names; tokens.css maps the Hallmark names onto these). Light is the
+ * default; dark is selected with its own steps (not an automatic flip): it follows the OS setting
+ * unless the viewer picked a theme, which sets data-theme. Chart series colours come from a palette
+ * validated for colour-blind separation and contrast in both modes — keep them in sync with
+ * docs/PLAN.md if you change them.
  */
 :root {
   color-scheme: light;
-  --page: #f6f6f3;
-  --surface: #fcfcfb;
-  --surface-2: #f1f1ed;
-  --surface-3: #e7e6e0;
-  --ink: #0b0b0b;
-  --ink-2: #52514e;
-  --muted: #6b6a65;
-  --faint: #898781;
-  --line: rgba(11, 11, 11, 0.1);
-  --line-strong: rgba(11, 11, 11, 0.18);
-  --grid: #e1e0d9;
-  --axis: #c3c2b7;
+  --page: #f3f2ee;
+  --surface: #ffffff;
+  --surface-2: #f6f5f1;
+  --surface-3: #ebe9e3;
+  --rail: #eceae4;
+  --ink: #161614;
+  --ink-2: #474641;
+  --muted: #6a6963;
+  --faint: #8a8882;
+  --line: rgba(22, 22, 20, 0.08);
+  --line-strong: rgba(22, 22, 20, 0.16);
+  --grid: #e6e4dd;
+  --axis: #c6c4ba;
+  --elev-panel: 0 1px 2px rgba(22, 22, 20, 0.04), 0 4px 16px -6px rgba(22, 22, 20, 0.06);
+  --elev-pop: 0 8px 28px -8px rgba(22, 22, 20, 0.22);
+  --elev-pin: 0 1px 4px rgba(0, 0, 0, 0.3);
+  --map-ink: #0b0b0b;
+  --on-series: #ffffff;
 
   --brand: #0f766e;
   --brand-hover: #115e59;
   --brand-ink: #ffffff;
-  --brand-soft: #e3f1ef;
+  --brand-soft: #e4f1ee;
 
   /* data */
   --series-1: #2a78d6;
   --series-2: #eb6834;
   --series-1-track: #cde2fb;
-  --deemph: #c3c2b7;
+  --deemph: #c6c4ba;
 
   /* status — always paired with an icon and a label */
   --good: #0ca30c;
   --good-text: #006300;
-  --good-soft: #e5f4e3;
+  --good-soft: #e7f3e4;
   --warning: #fab219;
   --warning-text: #8a5a00;
-  --warning-soft: #fdf2d8;
+  --warning-soft: #fcf1d9;
   --serious: #ec835a;
   --serious-text: #a3431c;
-  --serious-soft: #fcece4;
+  --serious-soft: #fbebe3;
   --critical: #d03b3b;
   --critical-text: #b42323;
-  --critical-soft: #fbe6e4;
+  --critical-soft: #fae5e3;
   --info-text: #1c5cab;
-  --info-soft: #e6effb;
+  --info-soft: #e7eff9;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --page: #0d0d0d;
-    --surface: #1a1a19;
-    --surface-2: #222220;
-    --surface-3: #2c2c2a;
-    --ink: #f0efec;
-    --ink-2: #c3c2b7;
+    --page: #0e0f0e;
+    --surface: #171816;
+    --surface-2: #1e1f1d;
+    --surface-3: #282926;
+    --rail: #121312;
+    --ink: #f0efea;
+    --ink-2: #c8c7bf;
     --muted: #a3a29a;
-    --faint: #898781;
-    --line: rgba(255, 255, 255, 0.1);
-    --line-strong: rgba(255, 255, 255, 0.18);
-    --grid: #2c2c2a;
-    --axis: #383835;
+    --faint: #85847d;
+    --line: rgba(255, 255, 255, 0.08);
+    --line-strong: rgba(255, 255, 255, 0.16);
+    --grid: #2a2b28;
+    --axis: #3a3b37;
+    --elev-panel: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 6px 20px -8px rgba(0, 0, 0, 0.6);
+    --elev-pop: 0 10px 32px -8px rgba(0, 0, 0, 0.7);
     --brand: #2bb3a3;
     --brand-hover: #3cc7b6;
     --brand-ink: #04211e;
@@ -87,18 +106,21 @@
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --page: #0d0d0d;
-  --surface: #1a1a19;
-  --surface-2: #222220;
-  --surface-3: #2c2c2a;
-  --ink: #f0efec;
-  --ink-2: #c3c2b7;
+  --page: #0e0f0e;
+  --surface: #171816;
+  --surface-2: #1e1f1d;
+  --surface-3: #282926;
+  --rail: #121312;
+  --ink: #f0efea;
+  --ink-2: #c8c7bf;
   --muted: #a3a29a;
-  --faint: #898781;
-  --line: rgba(255, 255, 255, 0.1);
-  --line-strong: rgba(255, 255, 255, 0.18);
-  --grid: #2c2c2a;
-  --axis: #383835;
+  --faint: #85847d;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.16);
+  --grid: #2a2b28;
+  --axis: #3a3b37;
+  --elev-panel: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 6px 20px -8px rgba(0, 0, 0, 0.6);
+  --elev-pop: 0 10px 32px -8px rgba(0, 0, 0, 0.7);
   --brand: #2bb3a3;
   --brand-hover: #3cc7b6;
   --brand-ink: #04211e;
@@ -140,6 +162,7 @@
   --color-series-2: var(--series-2);
   --color-series-1-track: var(--series-1-track);
   --color-deemph: var(--deemph);
+  --color-rail: var(--rail);
   --color-good: var(--good);
   --color-good-text: var(--good-text);
   --color-good-soft: var(--good-soft);
@@ -154,23 +177,12 @@
   --color-critical-soft: var(--critical-soft);
   --color-info-text: var(--info-text);
   --color-info-soft: var(--info-soft);
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --font-sans: var(--font-body);
+  --font-display: var(--font-newsreader), "Newsreader", ui-serif, Georgia, serif;
+  --shadow-panel: var(--elev-panel);
+  --shadow-pop: var(--elev-pop);
 }
 
-html {
-  background: var(--page);
-}
-
-body {
-  background: var(--page);
-  color: var(--ink);
-  font-family: var(--font-sans);
-}
-
-:focus-visible {
-  outline: 2px solid var(--brand);
-  outline-offset: 2px;
-}
 
 /* ── Live pulse (clinician currently on a visit) ── */
 @keyframes live-pulse {
@@ -211,7 +223,7 @@ body {
 
 /* ── Map pins (Leaflet divIcons) ── */
 .leaflet-container {
-  font-family: var(--font-sans);
+  font-family: var(--font-body);
   background: var(--surface-2);
 }
 
@@ -220,8 +232,8 @@ body {
   color: var(--ink);
   border: 1px solid var(--line);
   border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-  padding: 6px 10px;
+  box-shadow: var(--elev-pop);
+  padding: var(--space-xs) var(--space-sm);
   font-size: 12px;
   line-height: 1.35;
 }
@@ -235,7 +247,7 @@ body {
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
-  box-shadow: 0 0 0 2px var(--surface), 0 1px 4px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 0 2px var(--surface), var(--elev-pin);
 }
 
 .map-pin svg {
@@ -248,7 +260,7 @@ body {
   height: 22px;
   background: var(--surface);
   color: var(--ink-2);
-  box-shadow: 0 0 0 1.5px var(--axis), 0 1px 3px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 0 0 1.5px var(--axis), var(--elev-pin);
 }
 
 .map-pin-home svg {
@@ -281,14 +293,14 @@ body {
   width: 24px;
   height: 24px;
   background: var(--series-1);
-  color: #fff;
+  color: var(--on-series);
 }
 
 .map-pin-flag {
   width: 24px;
   height: 24px;
   background: var(--warning);
-  color: #0b0b0b;
+  color: var(--map-ink);
 }
 
 .map-pin-ok svg,
@@ -326,4 +338,24 @@ body {
 
 .leaflet-control-attribution {
   font-size: 10px;
+}
+
+/* Map zoom buttons: the same pressed and focus states as the console's own controls. */
+.leaflet-bar a {
+  color: var(--ink);
+  background: var(--surface);
+  transition: background-color var(--dur-micro) var(--ease-out);
+}
+
+.leaflet-bar a:hover {
+  background: var(--surface-2);
+}
+
+.leaflet-bar a:active {
+  background: var(--surface-3);
+}
+
+.leaflet-bar a:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: -2px;
 }

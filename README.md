@@ -65,7 +65,7 @@ npm run seed    # demo accounts + visits around "now"
 npm run smoke   # end-to-end test; prints PASS/FAIL per step and cleans up after itself
 ```
 
-Seeded accounts (all use `DEMO_PASSWORD`): `admin@example.com` (office), `dr.amara@example.com`, `dr.kwame@example.com`, `nurse.grace@example.com`, `nurse.fatou@example.com` (clinicians), and patients `adaeze@example.com`, `joseph@example.com`, `esther@example.com`, `samuel@example.com`, `mariam@example.com`, `peter@example.com`.
+Seeded accounts (all use `DEMO_PASSWORD`): `admin@example.com` (office), `dr.aya@example.com`, `dr.yao@example.com`, `nurse.adjoua@example.com`, `nurse.awa@example.com` (clinicians), and patients `amenan@example.com`, `koffi@example.com`, `affoue@example.com`, `seydou@example.com`, `aminata@example.com`, `jean@example.com`.
 
 Re-run `npm run seed` right before a demo so "today" has live activity (it wipes and recreates only the `@example.com` accounts).
 

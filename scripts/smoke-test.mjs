@@ -56,7 +56,7 @@ try {
   check('patient sets home location', !homeErr, homeErr?.message);
 
   // 3. Booking → accept
-  const { error: drErr } = await doctor.auth.signInWithPassword({ email: 'dr.amara@example.com', password: DEMO_PASSWORD });
+  const { error: drErr } = await doctor.auth.signInWithPassword({ email: 'dr.aya@example.com', password: DEMO_PASSWORD });
   check('doctor signs in', !drErr, drErr?.message);
   const { data: drProfile } = await doctor.from('profiles').select('id, role').eq('role', 'doctor').limit(5);
   const doctorId = (await doctor.auth.getUser()).data.user?.id;
@@ -74,7 +74,7 @@ try {
   const { data: inbox } = await doctor.from('visits').select('id, status').eq('id', visit.id);
   check('doctor sees the new request', inbox?.length === 1);
   const { data: hidden } = await (async () => {
-    await otherPatient.auth.signInWithPassword({ email: 'adaeze@example.com', password: DEMO_PASSWORD });
+    await otherPatient.auth.signInWithPassword({ email: 'amenan@example.com', password: DEMO_PASSWORD });
     return otherPatient.from('visits').select('id').eq('id', visit.id);
   })();
   check('another patient cannot see it', (hidden ?? []).length === 0);

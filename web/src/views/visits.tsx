@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 import { useConsole } from "@/components/console-data";
-import { Button, Card, cx, EmptyState, ErrorNote, PageHeader, Segmented, Select, Spinner } from "@/components/ui";
+import { Button, cx, EmptyState, ErrorNote, PageHeader, Segmented, Select, Spinner } from "@/components/ui";
 import { VisitTable } from "@/components/visit-table";
 import { downloadCsv } from "@/lib/csv";
 import { addDays, dayKey, MS, startOfDay } from "@/lib/format";
@@ -157,59 +157,61 @@ export function VisitsView() {
         }
       />
 
-      {/* one filter row, above everything it scopes */}
-      <div className="mb-4 flex flex-wrap items-end gap-3">
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-muted">When</span>
-          <Segmented label="When" value={when} onChange={(v) => setParam("when", v === "upcoming" ? null : v)} options={WHEN} />
+      {/* one object: the filters are the table's toolbar, above everything they scope */}
+      <section aria-label="Visits" className={cx("rounded-[14px] border border-line bg-surface shadow-panel", error && "opacity-90")}>
+        <div className="flex flex-wrap items-end gap-3 border-b border-line px-6 pt-5 pb-5">
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-medium text-muted">When</span>
+            <Segmented label="When" value={when} onChange={(v) => setParam("when", v === "upcoming" ? null : v)} options={WHEN} />
+          </div>
+          <Select label="Status" value={status} onChange={(e) => setParam("status", e.target.value)}>
+            <option value="all">All statuses</option>
+            {STATUS_ORDER.map((s) => (
+              <option key={s} value={s}>
+                {STATUS_LABEL[s]}
+              </option>
+            ))}
+          </Select>
+          <Select label="Clinician" value={clinician} onChange={(e) => setParam("clinician", e.target.value)}>
+            <option value="all">Everyone</option>
+            <option value="unassigned">Unassigned</option>
+            {data.clinicians.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.full_name}
+              </option>
+            ))}
+          </Select>
+          <label className="flex h-9 cursor-pointer items-center gap-2 rounded-[9px] border border-line-strong bg-surface px-3 text-sm text-ink transition-colors hover:bg-surface-2">
+            <input type="checkbox" checked={reviewOnly} onChange={(e) => setParam("review", e.target.checked ? "1" : null)} className="size-4 accent-[var(--brand)]" />
+            Needs review only
+          </label>
+          <label className="relative min-w-56 flex-1">
+            <span className="sr-only">Search visits</span>
+            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted" aria-hidden />
+            <input
+              type="search"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search patient, clinician or service"
+              className="h-9 w-full rounded-[9px] border border-line-strong bg-surface pr-3 pl-9 text-sm text-ink transition-colors placeholder:text-faint hover:border-axis"
+            />
+          </label>
         </div>
-        <Select label="Status" value={status} onChange={(e) => setParam("status", e.target.value)}>
-          <option value="all">All statuses</option>
-          {STATUS_ORDER.map((s) => (
-            <option key={s} value={s}>
-              {STATUS_LABEL[s]}
-            </option>
-          ))}
-        </Select>
-        <Select label="Clinician" value={clinician} onChange={(e) => setParam("clinician", e.target.value)}>
-          <option value="all">Everyone</option>
-          <option value="unassigned">Unassigned</option>
-          {data.clinicians.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.full_name}
-            </option>
-          ))}
-        </Select>
-        <label className="flex h-9 items-center gap-2 rounded-lg border border-line-strong bg-surface px-3 text-sm text-ink">
-          <input type="checkbox" checked={reviewOnly} onChange={(e) => setParam("review", e.target.checked ? "1" : null)} className="size-4 accent-[var(--brand)]" />
-          Needs review only
-        </label>
-        <label className="relative flex-1 basis-56">
-          <span className="sr-only">Search visits</span>
-          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted" aria-hidden />
-          <input
-            type="search"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search patient, clinician or service"
-            className="h-9 w-full rounded-lg border border-line-strong bg-surface pr-3 pl-9 text-sm text-ink placeholder:text-faint"
-          />
-        </label>
-      </div>
 
-      <Card
-        title={`${visits.length} visit${visits.length === 1 ? "" : "s"}`}
-        subtitle={WHEN.find((w) => w.value === when)?.label}
-        className={cx(error && "opacity-90")}
-      >
-        <VisitTable
-          visits={visits}
-          now={now}
-          caption="Visits"
-          columns={["when", "patient", "service", "clinician", "status", "clock", "check", "duration", "vitals"]}
-          empty={<EmptyState icon={ClipboardList} title="No visits match these filters" body="Try a wider date range or clear a filter." />}
-        />
-      </Card>
+        <div className="px-6 pt-4 pb-6">
+          <h2 className="mb-3 text-[15px] font-semibold text-ink">
+            {`${visits.length} visit${visits.length === 1 ? "" : "s"}`}
+            <span className="ml-2.5 font-normal text-muted">{WHEN.find((w) => w.value === when)?.label}</span>
+          </h2>
+          <VisitTable
+            visits={visits}
+            now={now}
+            caption="Visits"
+            columns={["when", "patient", "service", "clinician", "status", "clock", "check", "duration", "vitals"]}
+            empty={<EmptyState icon={ClipboardList} title="No visits match these filters" body="Try a wider date range or clear a filter." />}
+          />
+        </div>
+      </section>
     </>
   );
 }

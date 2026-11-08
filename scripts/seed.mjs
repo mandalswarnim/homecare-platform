@@ -49,18 +49,18 @@ const HOUR = 60 * MIN;
 // ── people ──
 const STAFF = [
   { key: 'admin', role: 'admin', email: `admin@${DOMAIN}`, full_name: 'Office Admin', phone: '070 000 0100' },
-  { key: 'amara', role: 'doctor', email: `dr.amara@${DOMAIN}`, full_name: 'Dr. Amara Okafor', specialty: 'General practitioner', phone: '070 000 0101' },
-  { key: 'kwame', role: 'doctor', email: `dr.kwame@${DOMAIN}`, full_name: 'Dr. Kwame Mensah', specialty: 'Family physician', phone: '070 000 0102' },
-  { key: 'grace', role: 'nurse', email: `nurse.grace@${DOMAIN}`, full_name: 'Grace Wanjiru', specialty: 'Registered nurse', phone: '070 000 0103' },
-  { key: 'fatou', role: 'nurse', email: `nurse.fatou@${DOMAIN}`, full_name: 'Fatou Diallo', specialty: 'Registered nurse', phone: '070 000 0104' },
+  { key: 'aya', role: 'doctor', email: `dr.aya@${DOMAIN}`, full_name: 'Dr. Aya Kouamé', specialty: 'General practitioner', phone: '070 000 0101' },
+  { key: 'yao', role: 'doctor', email: `dr.yao@${DOMAIN}`, full_name: 'Dr. Yao Konan', specialty: 'Family physician', phone: '070 000 0102' },
+  { key: 'adjoua', role: 'nurse', email: `nurse.adjoua@${DOMAIN}`, full_name: 'Adjoua Kouadio', specialty: 'Registered nurse', phone: '070 000 0103' },
+  { key: 'awa', role: 'nurse', email: `nurse.awa@${DOMAIN}`, full_name: 'Awa Koné', specialty: 'Registered nurse', phone: '070 000 0104' },
 ];
 const PATIENTS = [
-  { key: 'adaeze', email: `adaeze@${DOMAIN}`, full_name: 'Adaeze Nwosu', address: '14 Palm Avenue', north: 1400, east: 900, dob: '1946-03-12' },
-  { key: 'joseph', email: `joseph@${DOMAIN}`, full_name: 'Joseph Boateng', address: '7 Ring Road East', north: -2000, east: 1700, dob: '1951-08-30' },
-  { key: 'esther', email: `esther@${DOMAIN}`, full_name: 'Esther Achieng', address: '22 Garden Close', north: 2800, east: -2200, dob: '1939-11-02' },
-  { key: 'samuel', email: `samuel@${DOMAIN}`, full_name: 'Samuel Mwangi', address: '3 Hospital Road', north: -700, east: -3100, dob: '1958-01-19' },
-  { key: 'mariam', email: `mariam@${DOMAIN}`, full_name: 'Mariam Sow', address: '9 Lagoon View', north: 3400, east: 2500, dob: '1944-06-25' },
-  { key: 'peter', email: `peter@${DOMAIN}`, full_name: 'Peter Ochieng', address: '41 Market Street', north: -3300, east: -600, dob: '1949-09-07' },
+  { key: 'amenan', email: `amenan@${DOMAIN}`, full_name: 'Amenan Brou', address: 'Rue des Jardins, Deux Plateaux', north: 1400, east: 900, dob: '1946-03-12' },
+  { key: 'koffi', email: `koffi@${DOMAIN}`, full_name: 'Koffi Assi', address: 'Cocody Danga', north: -2000, east: 1700, dob: '1951-08-30' },
+  { key: 'affoue', email: `affoue@${DOMAIN}`, full_name: 'Affoué Kassi', address: 'Adjamé Liberté', north: 2800, east: -2200, dob: '1939-11-02' },
+  { key: 'seydou', email: `seydou@${DOMAIN}`, full_name: 'Seydou Ouattara', address: 'Attécoubé', north: -700, east: -3100, dob: '1958-01-19' },
+  { key: 'aminata', email: `aminata@${DOMAIN}`, full_name: 'Aminata Bamba', address: 'Angré 8e Tranche', north: 3400, east: 2500, dob: '1944-06-25' },
+  { key: 'jean', email: `jean@${DOMAIN}`, full_name: 'Jean Gnagne', address: 'Avenue Chardy, Plateau', north: -3300, east: -600, dob: '1949-09-07' },
 ];
 
 const DOCTOR_SERVICES = ['Doctor home visit', 'Medication review', 'Vitals check'];
@@ -154,8 +154,8 @@ async function main() {
   const reports = [];
   const activity = [];
   const now = Date.now();
-  const doctors = ['amara', 'kwame'];
-  const nurses = ['grace', 'fatou'];
+  const doctors = ['aya', 'yao'];
+  const nurses = ['adjoua', 'awa'];
 
   function addVisit({ patient, clinician, start, status, service, duration = 60, outcome = {} }) {
     const visitId = randomUUID();
@@ -296,17 +296,17 @@ async function main() {
 
   // Today and the next few days, relative to the moment you seed.
   const t = (hours) => now + hours * HOUR;
-  addVisit({ patient: 'adaeze', clinician: 'grace', start: t(-6), status: 'completed', service: 'Nursing care' });
-  addVisit({ patient: 'samuel', clinician: 'kwame', start: t(-3.5), status: 'completed', service: 'Doctor home visit', outcome: { flag: 'outside_area' } });
-  addVisit({ patient: 'joseph', clinician: 'fatou', start: t(-0.7), status: 'in_progress', service: 'Wound dressing', outcome: { startedAt: t(-0.6) } });
-  addVisit({ patient: 'esther', clinician: 'amara', start: t(2), status: 'accepted', service: 'Doctor home visit' });
-  addVisit({ patient: 'mariam', clinician: 'grace', start: t(4), status: 'accepted', service: 'Injection / IV therapy' });
-  addVisit({ patient: 'peter', clinician: 'amara', start: t(22), status: 'requested', service: 'Medication review' });
-  addVisit({ patient: 'adaeze', clinician: null, start: t(5), status: 'requested', service: 'Vitals check' });
-  addVisit({ patient: 'samuel', clinician: 'kwame', start: t(27), status: 'declined', service: 'Doctor home visit', outcome: { declineReason: 'Away at a conference that day' } });
-  addVisit({ patient: 'joseph', clinician: 'amara', start: t(26), status: 'accepted', service: 'Doctor home visit' });
-  addVisit({ patient: 'esther', clinician: 'fatou', start: t(30), status: 'accepted', service: 'Nursing care' });
-  addVisit({ patient: 'peter', clinician: 'grace', start: t(-28), status: 'cancelled', service: 'Nursing care' });
+  addVisit({ patient: 'amenan', clinician: 'adjoua', start: t(-6), status: 'completed', service: 'Nursing care' });
+  addVisit({ patient: 'seydou', clinician: 'yao', start: t(-3.5), status: 'completed', service: 'Doctor home visit', outcome: { flag: 'outside_area' } });
+  addVisit({ patient: 'koffi', clinician: 'awa', start: t(-0.7), status: 'in_progress', service: 'Wound dressing', outcome: { startedAt: t(-0.6) } });
+  addVisit({ patient: 'affoue', clinician: 'aya', start: t(2), status: 'accepted', service: 'Doctor home visit' });
+  addVisit({ patient: 'aminata', clinician: 'adjoua', start: t(4), status: 'accepted', service: 'Injection / IV therapy' });
+  addVisit({ patient: 'jean', clinician: 'aya', start: t(22), status: 'requested', service: 'Medication review' });
+  addVisit({ patient: 'amenan', clinician: null, start: t(5), status: 'requested', service: 'Vitals check' });
+  addVisit({ patient: 'seydou', clinician: 'yao', start: t(27), status: 'declined', service: 'Doctor home visit', outcome: { declineReason: 'Away at a conference that day' } });
+  addVisit({ patient: 'koffi', clinician: 'aya', start: t(26), status: 'accepted', service: 'Doctor home visit' });
+  addVisit({ patient: 'affoue', clinician: 'awa', start: t(30), status: 'accepted', service: 'Nursing care' });
+  addVisit({ patient: 'jean', clinician: 'adjoua', start: t(-28), status: 'cancelled', service: 'Nursing care' });
 
   await insert('visits', visits);
   await insert('visit_events', events.map(({ _logged, ...e }) => e));

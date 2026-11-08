@@ -1,8 +1,14 @@
 import type { Metadata, Viewport } from "next";
+import { Hanken_Grotesk, Newsreader } from "next/font/google";
 
 import { AuthProvider } from "@/lib/auth";
 import { THEME_STORAGE_KEY } from "@/lib/theme";
 import "./globals.css";
+
+// Hanken Grotesk carries the console (labels, data, controls); Newsreader is kept to page titles
+// and the wordmark. Both are self-hosted by next/font and exposed as CSS variables for tokens.css.
+const sans = Hanken_Grotesk({ subsets: ["latin"], variable: "--font-hanken", display: "swap" });
+const serif = Newsreader({ subsets: ["latin"], variable: "--font-newsreader", display: "swap", weight: ["500"], style: ["normal"] });
 
 export const metadata: Metadata = {
   title: { default: "CareRound Console", template: "%s · CareRound Console" },
@@ -12,8 +18,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f6f6f3" },
-    { media: "(prefers-color-scheme: dark)", color: "#0d0d0d" },
+    { media: "(prefers-color-scheme: light)", color: "#f3f2ee" },
+    { media: "(prefers-color-scheme: dark)", color: "#0e0f0e" },
   ],
 };
 
@@ -22,7 +28,7 @@ const themeScript = `try{var t=localStorage.getItem(${JSON.stringify(THEME_STORA
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={`${sans.variable} ${serif.variable}`}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>

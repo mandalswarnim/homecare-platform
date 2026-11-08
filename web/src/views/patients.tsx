@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { useConsole } from "@/components/console-data";
-import { Avatar, Badge, Card, EmptyState, ErrorNote, PageHeader, Spinner } from "@/components/ui";
+import { Avatar, Badge, Card, EmptyState, ErrorNote, Nil, PageHeader, Spinner } from "@/components/ui";
 import { formatFullDate, formatWhen } from "@/lib/format";
 import { useNow } from "@/lib/live";
 import type { PatientRecord, VisitFull } from "@/lib/types";
@@ -55,18 +55,18 @@ export function PatientsView() {
     <>
       <PageHeader
         title="Patients"
-        subtitle={`${data.patients.length} registered in the app${unpinned ? ` · ${unpinned} haven't pinned their home yet` : ""}`}
+        subtitle={`${data.patients.length} registered in the app${unpinned ? `, ${unpinned} haven't pinned their home yet` : ""}`}
       />
-      <div className="mb-4 max-w-md">
+      <div className="mb-5 max-w-md">
         <label className="relative block">
           <span className="sr-only">Search patients</span>
-          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted" aria-hidden />
+          <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted" aria-hidden />
           <input
             type="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search by name, phone or address"
-            className="h-9 w-full rounded-lg border border-line-strong bg-surface pr-3 pl-9 text-sm text-ink placeholder:text-faint"
+            className="h-10 w-full rounded-[10px] border border-line-strong bg-surface pr-3 pl-10 text-sm text-ink shadow-panel transition-colors placeholder:text-faint hover:border-axis"
           />
         </label>
       </div>
@@ -74,13 +74,13 @@ export function PatientsView() {
         {rows.length === 0 ? (
           <EmptyState icon={UsersRound} title={needle ? "No patients match" : "No patients yet"} body={needle ? undefined : "Patients appear here when they sign up in the app."} />
         ) : (
-          <div className="-mx-5 -mt-3 overflow-x-auto">
+          <div className="-mx-6 -mt-1 overflow-x-auto">
             <table className="w-full min-w-[760px] text-sm">
               <caption className="sr-only">Patients</caption>
               <thead>
                 <tr className="border-b border-line text-left text-xs text-muted">
                   {["Patient", "Address", "Home location", "Visits done", "Last visit", "Next visit"].map((h) => (
-                    <th key={h} scope="col" className="px-3 py-2.5 font-medium first:pl-5 last:pr-5">
+                    <th key={h} scope="col" className="px-3 pt-1 pb-2.5 font-medium first:pl-6 last:pr-6">
                       {h}
                     </th>
                   ))}
@@ -93,21 +93,21 @@ export function PatientsView() {
                     onClick={(e) => {
                       if (!(e.target as HTMLElement).closest("a")) router.push(`/patients/${p.id}`);
                     }}
-                    className="cursor-pointer border-b border-line last:border-0 hover:bg-surface-2"
+                    className="cursor-pointer border-b border-line transition-colors last:border-0 hover:bg-surface-2"
                   >
-                    <td className="px-3 py-2.5 pl-5">
-                      <div className="flex items-center gap-2.5">
-                        <Avatar name={p.profile?.full_name} size={30} />
+                    <td className="px-3 py-3.5 pl-6">
+                      <div className="flex items-center gap-3">
+                        <Avatar name={p.profile?.full_name} size={36} />
                         <div className="min-w-0">
-                          <Link href={`/patients/${p.id}`} className="font-medium text-ink hover:underline">
+                          <Link href={`/patients/${p.id}`} className="text-[15px] font-medium text-ink hover:underline">
                             {p.profile?.full_name || "Unnamed patient"}
                           </Link>
                           <div className="text-xs text-muted">{p.profile?.phone ?? "No phone"}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="max-w-64 truncate px-3 py-2.5 text-ink-2">{p.address ?? <span className="text-faint">—</span>}</td>
-                    <td className="px-3 py-2.5">
+                    <td className="max-w-64 truncate px-3 py-3.5 text-ink-2">{p.address ?? <Nil />}</td>
+                    <td className="px-3 py-3.5">
                       {p.home_lat != null ? (
                         <Badge tone="good" icon={MapPin} title={p.home_set_at ? `Pinned ${formatFullDate(p.home_set_at)}` : undefined}>
                           Pinned
@@ -118,19 +118,19 @@ export function PatientsView() {
                         </Badge>
                       )}
                     </td>
-                    <td className="px-3 py-2.5 tabular-nums">
+                    <td className="px-3 py-3.5 tabular-nums">
                       {completed}
-                      {review ? <span className="text-xs text-warning-text"> · {review} need review</span> : null}
+                      {review ? <span className="ml-2.5 text-xs text-warning-text">{review} need review</span> : null}
                     </td>
-                    <td className="px-3 py-2.5 whitespace-nowrap text-ink-2">{last ? formatWhen(last.scheduled_start, now) : <span className="text-faint">—</span>}</td>
-                    <td className="px-3 py-2.5 pr-5 whitespace-nowrap text-ink-2">
+                    <td className="px-3 py-3.5 whitespace-nowrap text-ink-2">{last ? formatWhen(last.scheduled_start, now) : <Nil />}</td>
+                    <td className="px-3 py-3.5 pr-6 whitespace-nowrap text-ink-2">
                       {next ? (
                         <>
                           {formatWhen(next.scheduled_start, now)}
                           <div className="text-xs text-muted">{next.service_type}</div>
                         </>
                       ) : (
-                        <span className="text-faint">—</span>
+                        <Nil />
                       )}
                     </td>
                   </tr>

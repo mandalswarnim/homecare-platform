@@ -135,7 +135,7 @@ export function TrendChart({
           y={M.top}
           width={width}
           title={titles[active]}
-          rows={series.map((s) => ({ color: s.color, value: s.values[active] == null ? "—" : `${format(s.values[active] as number)} ${unit}`, label: s.label }))}
+          rows={series.map((s) => ({ color: s.color, value: s.values[active] == null ? "None" : `${format(s.values[active] as number)} ${unit}`, label: s.label }))}
         />
       ) : null}
     </div>

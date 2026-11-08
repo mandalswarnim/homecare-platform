@@ -36,14 +36,15 @@ export function VitalsGrid({ report }: { report: VisitReport }) {
   return (
     <div className="space-y-4">
       {list.length ? (
-        <dl className="grid grid-cols-2 gap-3">
+        <dl className="grid grid-cols-2 gap-x-6 sm:grid-cols-3">
           {list.map((r) => (
-            <div key={r.label} className={cx("rounded-lg border px-3 py-2.5", r.outside ? "border-warning bg-warning-soft" : "border-line bg-surface")}>
-              <dt className="text-xs text-muted">{r.label}</dt>
-              <dd className="mt-0.5">
-                <span className="text-lg font-semibold text-ink">{r.value}</span> <span className="text-xs text-muted">{r.unit}</span>
+            <div key={r.label} className="border-t border-line py-4">
+              <dt className={cx("text-xs", r.outside ? "font-medium text-warning-text" : "text-muted")}>{r.label}</dt>
+              <dd className="mt-1.5">
+                <span className={cx("text-[24px] leading-none font-medium tabular-nums", r.outside ? "text-warning-text" : "text-ink")}>{r.value}</span>{" "}
+                <span className="text-xs text-muted">{r.unit}</span>
                 {r.outside ? (
-                  <span className="mt-0.5 flex items-center gap-1 text-[11px] font-medium text-warning-text">
+                  <span className="mt-1.5 flex items-center gap-1 text-xs font-medium text-warning-text">
                     <TriangleAlert className="size-3" aria-hidden /> Outside typical range ({r.range})
                   </span>
                 ) : null}

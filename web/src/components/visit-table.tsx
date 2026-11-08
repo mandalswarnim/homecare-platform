@@ -10,7 +10,7 @@ import type { VisitFull } from "@/lib/types";
 import { actualMs, eventOf, patientName, reportOf, verificationOf, visitFlags } from "@/lib/visits";
 
 import { StatusBadge, VerificationBadge } from "./status";
-import { Avatar, cx } from "./ui";
+import { Avatar, cx, Nil } from "./ui";
 
 export type VisitColumn = "when" | "time" | "patient" | "service" | "clinician" | "status" | "check" | "clock" | "duration" | "vitals";
 
@@ -30,11 +30,11 @@ const HEAD: Record<VisitColumn, string> = {
 function ClockCell({ v }: { v: VisitFull }) {
   const cin = eventOf(v, "clock_in");
   const cout = eventOf(v, "clock_out");
-  if (!cin && !cout) return <span className="text-faint">—</span>;
+  if (!cin && !cout) return <Nil />;
   return (
     <span className="text-[13px] whitespace-nowrap text-ink-2 tabular-nums">
-      {cin ? formatTime(cin.occurred_at) : "—"} – {cout ? formatTime(cout.occurred_at) : "…"}
-      {cin?.distance_m != null ? <span className="text-muted"> · {formatDistance(cin.distance_m)}</span> : null}
+      {cin ? formatTime(cin.occurred_at) : "?"} to {cout ? formatTime(cout.occurred_at) : "…"}
+      {cin?.distance_m != null ? <span className="ml-2 text-muted">{formatDistance(cin.distance_m)}</span> : null}
     </span>
   );
 }
@@ -80,7 +80,7 @@ function cell(col: VisitColumn, v: VisitFull, now: number): ReactNode {
           <HeartPulse className="size-3.5" aria-hidden /> Recorded
         </span>
       ) : (
-        <span className="text-faint">—</span>
+        <Nil />
       );
   }
 }
@@ -101,13 +101,13 @@ export function VisitTable({
   const router = useRouter();
   if (visits.length === 0) return <>{empty}</>;
   return (
-    <div className="-mx-5 overflow-x-auto">
+    <div className="-mx-6 overflow-x-auto">
       <table className="w-full min-w-[720px] text-sm">
         <caption className="sr-only">{caption}</caption>
         <thead>
           <tr className="border-b border-line text-left text-xs text-muted">
             {columns.map((c) => (
-              <th key={c} scope="col" className="px-3 py-2 font-medium first:pl-5 last:pr-5">
+              <th key={c} scope="col" className="px-3 pt-1 pb-2.5 font-medium first:pl-6 last:pr-6">
                 {HEAD[c]}
               </th>
             ))}
@@ -121,10 +121,10 @@ export function VisitTable({
                 if ((e.target as HTMLElement).closest("a,button,select,input")) return;
                 router.push(`/visits/${v.id}`);
               }}
-              className={cx("cursor-pointer border-b border-line last:border-0 hover:bg-surface-2", v.status === "cancelled" && "text-muted")}
+              className={cx("cursor-pointer border-b border-line transition-colors last:border-0 hover:bg-surface-2", v.status === "cancelled" && "text-muted")}
             >
               {columns.map((c) => (
-                <td key={c} className="px-3 py-2.5 align-middle first:pl-5 last:pr-5">
+                <td key={c} className="px-3 py-3 align-middle first:pl-6 last:pr-6">
                   {cell(c, v, now)}
                 </td>
               ))}
